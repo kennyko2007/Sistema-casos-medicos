@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- 1. HERO de cada interfaz (foto de fondo + saludo) -->
+    <!-- Uso: <section th:replace="~{layout/components :: hero('Atención Premium','Bienvenido,','Tonny','Texto opcional','/images/INTERFAZPACIENTE.png')}"></section> -->
+    <section th:fragment="hero(pill, linea1, linea2, texto, imagen)"
+             class="hero hero--compact"
+             th:style="'--hero-image: url(' + @{${imagen}} + ')'">
+        <div class="hero-inner">
+            <span class="pill" th:text="${pill}">Atención Premium</span>
+            <h1 class="hero-title">
+                <span th:text="${linea1}">Bienvenido,</span>
+                <span class="accent" th:text="${linea2}">Nombre</span>
+            </h1>
+            <p class="hero-text" th:if="${texto != null and texto != ''}" th:text="${texto}"></p>
+        </div>
+    </section>
+
+    <!-- 2. ALERTA. tipo: error | warning | success | info -->
+    <!-- Uso: <div th:replace="~{layout/components :: alerta('success','Guardado correctamente')}"></div> -->
+    <div th:fragment="alerta(tipo, mensaje)" class="alert" th:classappend="'alert-' + ${tipo}"
+         role="alert" th:text="${mensaje}">Mensaje</div>
+
+    <!-- 3. TARJETA DE ACCESO del portal (chat, casos clínicos, medicamentos...) -->
+    <!-- Uso: <a th:replace="~{layout/components :: acceso('💬','Chat con mi doctor','Escriba a su médico.','/paciente/chat_medico','Abrir chat')}"></a> -->
+    <a th:fragment="acceso(icono, titulo, descripcion, url, boton)" class="tile" th:href="@{${url}}">
+        <span class="tile-icon" th:text="${icono}">💬</span>
+        <span class="tile-title" th:text="${titulo}">Título</span>
+        <span class="tile-text" th:text="${descripcion}">Descripción</span>
+        <span class="tile-link"><span th:text="${boton}">Abrir</span> →</span>
+    </a>
+
+    <!-- 4. ESTADO VACÍO (cuando una lista no tiene datos) -->
+    <!-- Uso: <div th:replace="~{layout/components :: vacio('Aún no tiene casos clínicos.')}"></div> -->
+    <div th:fragment="vacio(mensaje)" class="empty-state" th:text="${mensaje}">Sin datos.</div>
+
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Registro de Paciente')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
+
+    <!-- Fondo a pantalla completa -->
+    <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
+
+    <main class="adm-wrap estrecho">
+        <section class="adm-card">
+            <h1 class="adm-title">Registro de <em>paciente</em></h1>
+            <p class="adm-sub">El paciente ingresará con el usuario y la contraseña que se le asignen aquí.</p>
+
+            <div th:if="${param.exito}" class="adm-msg adm-msg-ok">
+                Paciente registrado correctamente.
+            </div>
+
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <th:block th:switch="${param.error[0]}">
+                    <span th:case="'duplicado'">Ese nombre de usuario o correo ya está registrado.</span>
+                    <span th:case="'datos'">Revisa el usuario (3 a 50 caracteres: letras, números, punto, guion) y el nombre.</span>
+                    <span th:case="'clave'">La contraseña debe tener al menos 6 caracteres.</span>
+                    <span th:case="'fecha'">La fecha de nacimiento no puede ser futura.</span>
+                    <span th:case="'sangre'">El tipo de sangre no es válido.</span>
+                    <span th:case="*">No se pudo registrar al paciente. Intenta de nuevo.</span>
+                </th:block>
+            </div>
+
+            <form th:action="@{/admin/pacientes/guardar}" method="post" autocomplete="off">
+                <div class="adm-grid2">
+                    <div class="adm-field">
+                        <label class="adm-label" for="username">Usuario</label>
+                        <input id="username" type="text" name="username" class="adm-input" required
+                               minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]+" placeholder="Ej. paciente3">
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="password">Contraseña temporal</label>
+                        <input id="password" type="password" name="password" class="adm-input" required
+                               minlength="6" placeholder="Mínimo 6 caracteres">
+                    </div>
+                </div>
+
+                <div class="adm-field">
+                    <label class="adm-label" for="nombreCompleto">Nombre completo</label>
+                    <input id="nombreCompleto" type="text" name="nombreCompleto" class="adm-input" required
+                           maxlength="150" placeholder="Ej. Juan Pérez Mamani">
+                </div>
+
+                <div class="adm-grid2">
+                    <div class="adm-field">
+                        <label class="adm-label" for="fechaNacimiento">Fecha de nacimiento</label>
+                        <input id="fechaNacimiento" type="date" name="fechaNacimiento" class="adm-input" required>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="tipoSangre">Tipo de sangre</label>
+                        <select id="tipoSangre" name="tipoSangre" class="adm-input">
+                            <option value="">No indicado</option>
+                            <option th:each="t : ${#strings.arraySplit('O+,O-,A+,A-,B+,B-,AB+,AB-', ',')}"
+                                    th:value="${t}" th:text="${t}">O+</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="adm-grid2">
+                    <div class="adm-field">
+                        <label class="adm-label" for="telefono">Teléfono</label>
+                        <input id="telefono" type="text" name="telefono" class="adm-input" maxlength="20" placeholder="Ej. 70123456">
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="correo">Correo (opcional)</label>
+                        <input id="correo" type="email" name="correo" class="adm-input" maxlength="100" placeholder="paciente@correo.com">
+                    </div>
+                </div>
+
+                <button type="submit" class="adm-btn adm-btn-block">Registrar paciente</button>
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Atención')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/medico-ui :: estilos}"></th:block>
+    <div th:replace="~{layout/medico-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <h1 class="adm-title">Atención <em>clínica</em></h1>
+            <p class="adm-sub">Bienvenido/a, <strong th:text="${doctor?.nombre_completo}">Dr. Nombre</strong>.</p>
+
+            <div th:if="${param.exito}" class="adm-msg adm-msg-ok">Atención guardada correctamente.</div>
+            <div th:if="${error}" class="adm-msg adm-msg-error" th:text="${error}">Mensaje</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <th:block th:switch="${param.error[0]}">
+                    <span th:case="'caso'">Ese caso no es tuyo o ya está concluido.</span>
+                    <span th:case="'especialidad'">La especialidad elegida no es válida para tu perfil.</span>
+                    <span th:case="'db'">Ocurrió un error al guardar. Intenta de nuevo.</span>
+                    <span th:case="*">No se pudo guardar la atención.</span>
+                </th:block>
+            </div>
+
+            <div class="med-grid">
+
+                <!-- ============ Columna izquierda: casos y horarios ============ -->
+                <aside>
+                    <div class="med-box">
+                        <h3>Mis <em>casos</em></h3>
+                        <ul class="med-lista">
+                            <li th:each="c : ${casos}">
+                                <a th:href="@{/medico/atencion(caso=${c.id})}" class="med-item"
+                                   th:classappend="${casoActual != null and casoActual.id == c.id} ? 'activo'">
+                                    <span th:text="${c.titulo_caso}">Título del caso</span>
+                                    <small th:text="|${c.nombre_paciente} · ${c.estado}|">Paciente · Estado</small>
+                                </a>
+                            </li>
+                            <li th:if="${#lists.isEmpty(casos)}" class="adm-hint">No tienes casos activos.</li>
+                        </ul>
+                    </div>
+
+                    <div class="med-box">
+                        <h3>Mis <em>horarios</em></h3>
+                        <ul class="med-lista">
+                            <li th:each="h : ${horarios}" class="med-item">
+                                <span th:text="${h.dia_semana}">Lunes</span>
+                                <small th:text="|${h.hora_inicio} – ${h.hora_fin}|">08:00 – 14:00</small>
+                            </li>
+                            <li th:if="${#lists.isEmpty(horarios)}" class="adm-hint">Sin horarios registrados.</li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- ============ Columna derecha ============ -->
+                <div>
+                    <div th:if="${casoActual == null}" class="med-box">
+                        <p class="adm-hint" style="margin:0">No hay un caso activo para atender.</p>
+                    </div>
+
+                    <th:block th:if="${casoActual != null}">
+
+                        <!-- Datos del caso -->
+                        <div class="med-box">
+                            <h3>Caso <em th:text="${casoActual.titulo_caso}">Título</em></h3>
+                            <div class="adm-grid2">
+                                <p class="med-dato"><b>Paciente</b><span th:text="${casoActual.nombre_paciente}">Nombre</span></p>
+                                <p class="med-dato"><b>Estado</b>
+                                    <span class="adm-pill" th:text="${casoActual.estado}"
+                                          th:classappend="${casoActual.estado == 'Concluido'} ? 'adm-pill-ok' : (${casoActual.estado == 'Pendiente'} ? 'adm-pill-warn' : '')">En Tratamiento</span>
+                                </p>
+                                <p class="med-dato"><b>Edad</b>
+                                    <span th:text="${casoActual.edad != null} ? |${casoActual.edad} años| : '—'">—</span>
+                                </p>
+                                <p class="med-dato"><b>Tipo de sangre</b>
+                                    <span th:text="${#strings.isEmpty(casoActual.tipo_sangre)} ? '—' : ${casoActual.tipo_sangre}">—</span>
+                                </p>
+                            </div>
+                            <p class="med-dato"><b>Síntomas</b><span th:text="${casoActual.descripcion_sintomas}">Descripción</span></p>
+                            <p class="med-dato"><b>Diagnóstico actual</b>
+                                <span th:text="${#strings.isEmpty(casoActual.diagnostico)} ? 'Sin diagnóstico aún' : ${casoActual.diagnostico}">—</span>
+                            </p>
+                        </div>
+
+                        <!-- Formulario de atención -->
+                        <form th:action="@{/medico/guardar-atencion}" method="post" autocomplete="off">
+                            <input type="hidden" name="idCaso" th:value="${casoActual.id}">
+
+                            <div class="med-box">
+                                <h3>Nueva <em>atención</em></h3>
+
+                                <div class="adm-grid2">
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="idEspecialidad">Especialidad</label>
+                                        <select id="idEspecialidad" name="idEspecialidad" class="adm-input" required>
+                                            <option th:each="e : ${especialidades}"
+                                                    th:value="${e.id}" th:text="${e.nombre}"
+                                                    th:selected="${especialidadActual != null and especialidadActual.id == e.id}"
+                                                    th:attr="data-plantilla=${e.nombre == 'Cardiología' ? 'cardiologia' : (e.nombre == 'Neurología' ? 'neurologia' : 'general')}">
+                                                Medicina General
+                                            </option>
+                                        </select>
+                                        <p class="adm-hint">Solo aparecen tus especialidades con formulario. El formulario cambia según la que elijas.</p>
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="idEnfermero">Enfermero/a que tomó los signos</label>
+                                        <select id="idEnfermero" name="idEnfermero" class="adm-input">
+                                            <option value="">Sin enfermero/a</option>
+                                            <option th:each="e : ${enfermeros}" th:value="${e.id}" th:text="${e.nombre_completo}">Nombre</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Signos vitales: comunes a todas las especialidades -->
+                                <span class="adm-label">Signos vitales</span>
+                                <div class="adm-grid2">
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_presion">Presión arterial (mmHg)</label>
+                                        <input id="f_presion" name="f_presion" class="adm-input" maxlength="7" pattern="\d{2,3}/\d{2,3}" placeholder="120/80">
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_pulso">Pulso (lpm)</label>
+                                        <input id="f_pulso" name="f_pulso" type="number" min="20" max="250" class="adm-input" placeholder="75">
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_temperatura">Temperatura (°C)</label>
+                                        <input id="f_temperatura" name="f_temperatura" type="number" step="0.1" min="30" max="45" class="adm-input" placeholder="36.5">
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_saturacion">Saturación O₂ (%)</label>
+                                        <input id="f_saturacion" name="f_saturacion" type="number" min="50" max="100" class="adm-input" placeholder="97">
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_peso">Peso (kg)</label>
+                                        <input id="f_peso" name="f_peso" type="number" step="0.1" min="1" max="400" class="adm-input">
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_talla">Talla (cm)</label>
+                                        <input id="f_talla" name="f_talla" type="number" min="30" max="250" class="adm-input">
+                                    </div>
+                                </div>
+
+                                <!-- ===== Plantilla: MEDICINA GENERAL ===== -->
+                                <div class="plantilla" data-plantilla="general">
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_antecedentes">Antecedentes relevantes</label>
+                                        <textarea id="f_antecedentes" name="f_antecedentes" class="adm-input" maxlength="2000"></textarea>
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_examen_fisico">Examen físico</label>
+                                        <textarea id="f_examen_fisico" name="f_examen_fisico" class="adm-input" maxlength="2000"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- ===== Plantilla: CARDIOLOGÍA ===== -->
+                                <div class="plantilla" data-plantilla="cardiologia" hidden>
+                                    <div class="adm-grid2">
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_ritmo">Ritmo cardíaco</label>
+                                            <select id="f_ritmo" name="f_ritmo" class="adm-input">
+                                                <option value="">No evaluado</option>
+                                                <option>Regular</option>
+                                                <option>Irregular</option>
+                                            </select>
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_soplo">Soplos</label>
+                                            <select id="f_soplo" name="f_soplo" class="adm-input">
+                                                <option value="">No evaluado</option>
+                                                <option>No</option>
+                                                <option>Sí</option>
+                                            </select>
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_dolor_toracico">Dolor torácico</label>
+                                            <select id="f_dolor_toracico" name="f_dolor_toracico" class="adm-input">
+                                                <option value="">No evaluado</option>
+                                                <option>No</option>
+                                                <option>Sí</option>
+                                            </select>
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_edema">Edema en extremidades</label>
+                                            <select id="f_edema" name="f_edema" class="adm-input">
+                                                <option value="">No evaluado</option>
+                                                <option>No</option>
+                                                <option>Sí</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_ecg">Hallazgos de electrocardiograma</label>
+                                        <textarea id="f_ecg" name="f_ecg" class="adm-input" maxlength="2000"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- ===== Plantilla: NEUROLOGÍA ===== -->
+                                <div class="plantilla" data-plantilla="neurologia" hidden>
+                                    <div class="adm-grid2">
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_glasgow">Escala de Glasgow (3–15)</label>
+                                            <input id="f_glasgow" name="f_glasgow" type="number" min="3" max="15" class="adm-input">
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_cefalea">Intensidad de cefalea (0–10)</label>
+                                            <input id="f_cefalea" name="f_cefalea" type="number" min="0" max="10" class="adm-input">
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_pupilas">Pupilas</label>
+                                            <select id="f_pupilas" name="f_pupilas" class="adm-input">
+                                                <option value="">No evaluado</option>
+                                                <option>Isocóricas</option>
+                                                <option>Anisocóricas</option>
+                                            </select>
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_fuerza">Fuerza muscular (0–5)</label>
+                                            <input id="f_fuerza" name="f_fuerza" class="adm-input" maxlength="30" placeholder="Ej. 5/5">
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_reflejos">Reflejos</label>
+                                            <input id="f_reflejos" name="f_reflejos" class="adm-input" maxlength="120">
+                                        </div>
+                                        <div class="adm-field">
+                                            <label class="adm-label" for="f_marcha">Marcha</label>
+                                            <input id="f_marcha" name="f_marcha" class="adm-input" maxlength="120">
+                                        </div>
+                                    </div>
+                                    <div class="adm-field">
+                                        <label class="adm-label" for="f_hallazgos">Hallazgos neurológicos</label>
+                                        <textarea id="f_hallazgos" name="f_hallazgos" class="adm-input" maxlength="2000"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diagnóstico y recomendación -->
+                            <div class="med-box">
+                                <h3>Diagnóstico y <em>recomendación</em></h3>
+                                <div class="adm-field">
+                                    <label class="adm-label" for="diagnostico">Diagnóstico</label>
+                                    <textarea id="diagnostico" name="diagnostico" class="adm-input" maxlength="5000"
+                                              th:text="${casoActual.diagnostico}"></textarea>
+                                </div>
+                                <div class="adm-field">
+                                    <label class="adm-label" for="recomendacion">Recomendación para el paciente</label>
+                                    <textarea id="recomendacion" name="recomendacion" class="adm-input" maxlength="5000"></textarea>
+                                    <p class="adm-hint">Si la dejas vacía, el paciente verá “Sin recomendaciones”.</p>
+                                </div>
+                            </div>
+
+                            <!-- Medicamentos -->
+                            <div class="med-box">
+                                <h3>Medicamentos <em>recetados</em></h3>
+                                <div id="listaMeds"></div>
+                                <button type="button" id="btnAgregarMed" class="adm-btn adm-btn-sm adm-btn-ghost">+ Agregar medicamento</button>
+                            </div>
+
+                            <div class="adm-field">
+                                <div class="adm-checks">
+                                    <label><input type="checkbox" name="concluir" value="true"> Concluir el caso con esta atención</label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="adm-btn adm-btn-block">Guardar atención</button>
+                        </form>
+
+                        <!-- Atenciones previas -->
+                        <div class="med-box" style="margin-top:1.25rem">
+                            <h3>Atenciones <em>previas</em></h3>
+                            <div class="adm-table-wrap">
+                                <table class="adm-table">
+                                    <thead>
+                                        <tr><th>Fecha</th><th>Especialidad</th><th>Recomendación</th><th>PDF</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="a : ${atencionesPrevias}">
+                                            <td th:text="${a.fecha_atencion}">2026-11-08</td>
+                                            <td th:text="${a.especialidad}">Cardiología</td>
+                                            <td th:text="${#strings.isEmpty(a.recomendacion)} ? 'Sin recomendaciones' : ${a.recomendacion}">—</td>
+                                            <td>
+                                                <a th:if="${a.pdf_ruta != null}" th:href="@{/documentos/atencion/{id}(id=${a.id})}"
+                                                   target="_blank" rel="noopener" class="adm-btn adm-btn-sm adm-btn-ghost">Ver PDF</a>
+                                                <span th:unless="${a.pdf_ruta != null}" class="adm-pill">Pendiente</span>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(atencionesPrevias)}">
+                                            <td colspan="4" class="vacio">Este caso aún no tiene atenciones.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <!-- Fila modelo de medicamento -->
+    <template id="tplMed">
+        <div class="med-meds-row">
+            <input class="adm-input" name="medNombre" maxlength="120" placeholder="Medicamento">
+            <input class="adm-input" name="medDosis" maxlength="60" placeholder="Dosis">
+            <input class="adm-input" name="medFrecuencia" maxlength="60" placeholder="Frecuencia">
+            <input class="adm-input" name="medDuracion" maxlength="60" placeholder="Duración">
+            <input class="adm-input" name="medIndicaciones" maxlength="255" placeholder="Indicaciones">
+            <button type="button" class="adm-btn adm-btn-sm adm-btn-danger quitar">✕</button>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            // --- Plantilla según la especialidad elegida ---
+            var sel = document.getElementById('idEspecialidad');
+            if (sel) {
+                var bloques = document.querySelectorAll('.plantilla');
+                function actualizarPlantilla() {
+                    var opt = sel.options[sel.selectedIndex];
+                    var clave = opt ? opt.getAttribute('data-plantilla') : 'general';
+                    bloques.forEach(function (b) {
+                        var activo = b.getAttribute('data-plantilla') === clave;
+                        b.hidden = !activo;
+                        b.querySelectorAll('input,select,textarea').forEach(function (i) { i.disabled = !activo; });
+                    });
+                }
+                sel.addEventListener('change', actualizarPlantilla);
+                actualizarPlantilla();
+            }
+
+            // --- Medicamentos dinámicos ---
+            var lista = document.getElementById('listaMeds');
+            var btn = document.getElementById('btnAgregarMed');
+            var tpl = document.getElementById('tplMed');
+            if (lista && btn && tpl) {
+                btn.addEventListener('click', function () {
+                    lista.appendChild(tpl.content.cloneNode(true));
+                });
+                lista.addEventListener('click', function (ev) {
+                    if (ev.target.classList.contains('quitar')) {
+                        ev.target.closest('.med-meds-row').remove();
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

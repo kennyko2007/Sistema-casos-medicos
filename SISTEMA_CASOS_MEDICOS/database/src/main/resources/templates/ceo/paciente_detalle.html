@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Detalle del paciente')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/ceo-ui :: estilos}"></th:block>
+    <div th:replace="~{layout/ceo-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title"><em th:text="${paciente['nombre_completo']}">Paciente</em></h1>
+                    <p class="adm-sub">
+                        <span th:text="|Nacimiento: ${paciente['fecha_nacimiento']}|">Nacimiento</span> ·
+                        <span th:text="|Teléfono: ${#strings.isEmpty(paciente['telefono']) ? '—' : paciente['telefono']}|">Teléfono</span>
+                        <span th:unless="${#strings.isEmpty(paciente['tipo_sangre'])}" class="adm-pill" th:text="|Sangre ${paciente['tipo_sangre']}|">Sangre O+</span>
+                        <span th:if="${paciente['activo']}" class="adm-pill adm-pill-ok">Activo</span>
+                        <span th:unless="${paciente['activo']}" class="adm-pill adm-pill-warn">Deshabilitado</span>
+                    </p>
+                </div>
+                <a th:href="@{/ceo/pacientes}" class="adm-btn adm-btn-ghost adm-btn-sm">← Pacientes</a>
+            </div>
+
+            <div class="med-box">
+                <h3>Casos <em>clínicos</em></h3>
+                <div class="adm-table-wrap" th:if="${not #lists.isEmpty(casos)}">
+                    <table class="adm-table">
+                        <thead><tr><th>Caso</th><th>Doctor</th><th>Diagnóstico</th><th>Estado</th><th>Abierto</th></tr></thead>
+                        <tbody>
+                            <tr th:each="c : ${casos}">
+                                <td th:text="${c['titulo_caso']}">Título</td>
+                                <td th:text="${c['nombre_doctor']}">Doctor</td>
+                                <td th:text="${#strings.isEmpty(c['diagnostico']) ? 'Sin diagnóstico aún' : c['diagnostico']}">Diagnóstico</td>
+                                <td>
+                                    <span class="adm-pill" th:text="${c['estado']}"
+                                          th:classappend="${c['estado'] == 'Concluido'} ? 'adm-pill-ok' : (${c['estado'] == 'Pendiente'} ? 'adm-pill-warn' : '')">Estado</span>
+                                </td>
+                                <td th:text="${c['fecha_creacion']}">2026-11-08</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p th:if="${#lists.isEmpty(casos)}" class="adm-hint" style="margin:0">Este paciente no tiene casos.</p>
+            </div>
+
+            <div class="med-box" style="margin-bottom:0">
+                <h3>Historial de <em>atenciones</em></h3>
+                <div class="adm-table-wrap" th:if="${not #lists.isEmpty(historial)}">
+                    <table class="adm-table">
+                        <thead><tr><th>Fecha</th><th>Caso</th><th>Especialidad</th><th>Doctor</th><th>PDF</th><th>Recomendación</th></tr></thead>
+                        <tbody>
+                            <tr th:each="h : ${historial}">
+                                <td th:text="${h['fecha_atencion']}">2026-11-08</td>
+                                <td th:text="${h['titulo_caso']}">Título</td>
+                                <td th:text="${h['especialidad']}">Cardiología</td>
+                                <td th:text="${h['doctor']}">Doctor</td>
+                                <td>
+                                    <a th:if="${h['pdf_ruta'] != null}" th:href="@{/documentos/atencion/{id}(id=${h['id_atencion']})}"
+                                       target="_blank" rel="noopener" class="adm-btn adm-btn-sm adm-btn-ghost">Ver PDF</a>
+                                    <span th:unless="${h['pdf_ruta'] != null}" class="adm-pill">En preparación</span>
+                                </td>
+                                <td th:text="${h['recomendacion']}">Recomendación</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p th:if="${#lists.isEmpty(historial)}" class="adm-hint" style="margin:0">Sin atenciones registradas.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>
