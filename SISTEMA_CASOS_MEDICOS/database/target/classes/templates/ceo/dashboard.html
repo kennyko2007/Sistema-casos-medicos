@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Panel general')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/ceo-ui :: estilos}"></th:block>
+    <div th:replace="~{layout/ceo-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Panel <em>general</em></h1>
+                    <p class="adm-sub">Resumen del hospital en este momento.</p>
+                </div>
+            </div>
+
+            <div th:if="${error}" class="adm-msg adm-msg-error" th:text="${error}">Mensaje</div>
+
+            <div class="adm-acciones" style="margin-bottom:1.25rem">
+                <a th:href="@{/ceo/doctores}" class="adm-btn adm-btn-sm">Doctores</a>
+                <a th:href="@{/ceo/enfermeros}" class="adm-btn adm-btn-sm">Enfermeros</a>
+                <a th:href="@{/ceo/pacientes}" class="adm-btn adm-btn-sm">Pacientes</a>
+                <a th:href="@{/ceo/asistencia}" class="adm-btn adm-btn-sm">Asistencia en vivo</a>
+            </div>
+
+            <div class="med-box">
+                <h3>Personal y <em>pacientes</em> activos</h3>
+                <div class="adm-table-wrap">
+                    <table class="adm-table">
+                        <thead><tr><th>Indicador</th><th>Total</th></tr></thead>
+                        <tbody>
+                            <tr><td>Doctores</td><td th:text="${totalDoctores}">0</td></tr>
+                            <tr><td>Enfermeros</td><td th:text="${totalEnfermeros}">0</td></tr>
+                            <tr><td>Pacientes</td><td th:text="${totalPacientes}">0</td></tr>
+                            <tr><td>Casos clínicos (todos)</td><td th:text="${totalCasos}">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="med-box" style="margin-bottom:0">
+                <h3>Casos por <em>estado</em></h3>
+                <div class="adm-table-wrap" th:if="${resumenCasos != null and not #lists.isEmpty(resumenCasos)}">
+                    <table class="adm-table">
+                        <thead><tr><th>Estado</th><th>Total</th></tr></thead>
+                        <tbody>
+                            <tr th:each="r : ${resumenCasos}">
+                                <td>
+                                    <span class="adm-pill" th:text="${r['estado']}"
+                                          th:classappend="${r['estado'] == 'Concluido'} ? 'adm-pill-ok' : (${r['estado'] == 'Pendiente'} ? 'adm-pill-warn' : '')">Estado</span>
+                                </td>
+                                <td th:text="${r['total']}">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p th:if="${resumenCasos == null or #lists.isEmpty(resumenCasos)}" class="adm-hint" style="margin:0">Aún no hay casos registrados.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

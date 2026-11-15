@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Directorio')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
+
+    <!-- Fondo a pantalla completa -->
+    <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Directorio <em>general</em></h1>
+                    <p class="adm-sub">Nada se elimina: las cuentas se deshabilitan y pueden volver a habilitarse.</p>
+                </div>
+                <div class="adm-acciones">
+                    <a th:href="@{/admin/registro_paciente}" class="adm-btn adm-btn-sm">+ Paciente</a>
+                    <a th:href="@{/admin/registro_personal}" class="adm-btn adm-btn-sm">+ Personal</a>
+                </div>
+            </div>
+
+            <div th:if="${param.actualizado}" class="adm-msg adm-msg-ok">Cambios guardados correctamente.</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <span th:if="${param.error[0] == 'cv'}">El CV debe ser un PDF válido de máximo 5 MB.</span>
+                <span th:unless="${param.error[0] == 'cv'}">No se pudo completar la acción.</span>
+            </div>
+
+            <nav class="adm-tabs">
+                <a th:href="@{/admin/directorio}" class="adm-tab" th:classappend="${rolFiltro == null} ? 'activo'">Todos</a>
+                <a th:href="@{/admin/directorio(rol='doctor')}" class="adm-tab" th:classappend="${rolFiltro == 'doctor'} ? 'activo'">Doctores</a>
+                <a th:href="@{/admin/directorio(rol='enfermero')}" class="adm-tab" th:classappend="${rolFiltro == 'enfermero'} ? 'activo'">Enfermeros</a>
+                <a th:href="@{/admin/directorio(rol='paciente')}" class="adm-tab" th:classappend="${rolFiltro == 'paciente'} ? 'activo'">Pacientes</a>
+            </nav>
+
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Teléfono</th>
+                            <th>Último acceso</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u : ${usuarios}" th:classappend="${u.activo} ? '' : 'inactivo'">
+                            <td th:text="${u.nombre}">Nombre</td>
+                            <td th:text="${u.username}">usuario</td>
+                            <td><span class="adm-pill adm-cap" th:text="${u.rol}">doctor</span></td>
+                            <td th:text="${#strings.isEmpty(u.telefono)} ? '—' : ${u.telefono}">70000000</td>
+                            <td th:text="${u.ultimo_acceso != null} ? ${u.ultimo_acceso} : 'Nunca'">Nunca</td>
+                            <td>
+                                <span th:if="${u.activo}" class="adm-pill adm-pill-ok">Activo</span>
+                                <span th:unless="${u.activo}" class="adm-pill adm-pill-bad">Deshabilitado</span>
+                            </td>
+                            <td>
+                                <div class="adm-acciones">
+                                    <a th:href="@{/admin/usuarios/{id}/editar(id=${u.id})}" class="adm-btn adm-btn-sm adm-btn-ghost">Editar</a>
+
+                                    <a th:if="${(u.rol == 'doctor' or u.rol == 'enfermero') and u.cv_pdf_ruta != null}"
+                                       th:href="@{/documentos/cv/{id}(id=${u.id})}"
+                                       target="_blank" rel="noopener" class="adm-btn adm-btn-sm adm-btn-ghost">Ver CV</a>
+
+                                    <form th:if="${u.rol == 'doctor' or u.rol == 'enfermero'}"
+                                          th:action="@{/admin/usuarios/{id}/cv(id=${u.id})}"
+                                          method="post" enctype="multipart/form-data">
+                                        <input type="file" name="cvPdf" accept="application/pdf,.pdf" hidden
+                                               onchange="if (this.files.length) { if (this.files[0].size > 5242880) { alert('El PDF supera 5 MB.'); this.value = ''; } else { this.form.submit(); } }">
+                                        <button type="button" class="adm-btn adm-btn-sm adm-btn-ghost"
+                                                onclick="this.previousElementSibling.click()"
+                                                th:text="${u.cv_pdf_ruta != null} ? 'Reemplazar CV' : 'Subir CV'">Subir CV</button>
+                                    </form>
+
+                                    <form th:if="${u.activo}" th:action="@{/admin/usuarios/{id}/estado(id=${u.id})}" method="post"
+                                          onsubmit="return confirm('¿Seguro que deseas deshabilitar esta cuenta? Ya no podrá ingresar al sistema.');">
+                                        <input type="hidden" name="activo" value="false">
+                                        <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger">Deshabilitar</button>
+                                    </form>
+
+                                    <form th:unless="${u.activo}" th:action="@{/admin/usuarios/{id}/estado(id=${u.id})}" method="post">
+                                        <input type="hidden" name="activo" value="true">
+                                        <button type="submit" class="adm-btn adm-btn-sm adm-btn-ok">Habilitar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(usuarios)}">
+                            <td colspan="7" class="vacio">No hay usuarios para mostrar.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Registro de Asistencia')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
+    
+    <!-- Hero limpio solo con fondo -->
+    <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h2 class="adm-title" style="font-size: 1.8rem;">Historial <em>detallado</em></h2>
+                    <p class="adm-sub">Filtre los registros de entrada del personal médico y de enfermería.</p>
+                </div>
+                <a th:href="@{/admin/asistencia}" class="adm-btn adm-btn-ghost adm-btn-sm">← Asistencia de hoy</a>
+            </div>
+
+            <form th:action="@{/admin/asistencia/registro}" method="get" class="adm-rowform" style="margin-bottom:1.25rem">
+                <div>
+                    <label class="adm-label" for="desde">Desde</label>
+                    <input id="desde" type="date" name="desde" class="adm-input" style="width:180px" th:value="${desde}">
+                </div>
+                <div>
+                    <label class="adm-label" for="hasta">Hasta</label>
+                    <input id="hasta" type="date" name="hasta" class="adm-input" style="width:180px" th:value="${hasta}">
+                </div>
+                <button type="submit" class="adm-btn adm-btn-sm" style="align-self:flex-end">Filtrar</button>
+            </form>
+
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Nombre</th>
+                            <th>Cargo</th>
+                            <th>Estado</th>
+                            <th>Observación</th>
+                            <th>Registrado por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r : ${registros}">
+                            <td th:text="${r.fecha}">08/11/2026</td>
+                            <td th:text="${r.hora}">08:05</td>
+                            <td th:text="${r.nombre}">Nombre</td>
+                            <td><span class="adm-cap" th:text="${r.rol}">doctor</span></td>
+                            <td>
+                                <span class="adm-pill" th:text="${r.estado}"
+                                      th:classappend="${r.estado == 'Presente'} ? 'adm-pill-ok' : (${r.estado == 'Tarde'} ? 'adm-pill-warn' : (${r.estado == 'Ausente'} ? 'adm-pill-bad' : ''))">Presente</span>
+                            </td>
+                            <td th:text="${r.observacion}">—</td>
+                            <td th:text="${r.registrado_por}">admin1</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(registros)}">
+                            <td colspan="7" class="vacio">No hay registros de asistencia en este rango.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

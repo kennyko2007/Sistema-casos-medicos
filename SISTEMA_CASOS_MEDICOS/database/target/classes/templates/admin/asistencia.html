@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Asistencia del Personal')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
+
+    <!-- Fondo a pantalla completa -->
+    <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Asistencia del <em>personal</em></h1>
+                    <p class="adm-sub"><span th:text="${hoyTexto}">Domingo 8 de noviembre de 2026</span> · hora de La Paz, Bolivia</p>
+                </div>
+                <a th:href="@{/admin/asistencia/registro}" class="adm-btn adm-btn-ghost adm-btn-sm">Ver registro histórico</a>
+            </div>
+
+            <div th:if="${param.marcado}" class="adm-msg adm-msg-ok">Asistencia registrada.</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">No se pudo registrar la asistencia.</div>
+
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Cargo</th>
+                            <th>Horario de hoy</th>
+                            <th>Estado</th>
+                            <th>Marcar asistencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="a : ${asistenciaHoy}">
+                            <td th:text="${a.nombre}">Nombre</td>
+                            <td><span class="adm-cap" th:text="${a.rol}">doctor</span></td>
+                            <td>
+                                <span th:if="${a.hora_inicio != null}" th:text="|${a.hora_inicio} – ${a.hora_fin}|">08:00 – 14:00</span>
+                                <span th:unless="${a.hora_inicio != null}" class="adm-pill">Sin turno hoy</span>
+                            </td>
+                            <td>
+                                <span class="adm-pill" th:text="${a.estado}"
+                                      th:classappend="${a.estado == 'Presente'} ? 'adm-pill-ok' : (${a.estado == 'Tarde'} ? 'adm-pill-warn' : (${a.estado == 'Ausente'} ? 'adm-pill-bad' : ''))">Sin marcar</span>
+                                <div th:if="${a.hora != null}" class="adm-hint" th:text="|a las ${a.hora}|">a las 08:05</div>
+                            </td>
+                            <td>
+                                <form th:action="@{/admin/asistencia/marcar}" method="post" class="adm-rowform">
+                                    <input type="hidden" name="idUsuario" th:value="${a.id_usuario}">
+                                    <input type="text" name="observacion" class="adm-input" maxlength="255"
+                                           placeholder="Observación (opcional)" th:value="${a.observacion}">
+                                    <button type="submit" name="estado" value="Presente" class="adm-btn adm-btn-sm adm-btn-ok">Presente</button>
+                                    <button type="submit" name="estado" value="Tarde" class="adm-btn adm-btn-sm adm-btn-warn">Tarde</button>
+                                    <button type="submit" name="estado" value="Ausente" class="adm-btn adm-btn-sm adm-btn-danger">Ausente</button>
+                                    <button type="submit" name="estado" value="Permiso" class="adm-btn adm-btn-sm adm-btn-gris">Permiso</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(asistenciaHoy)}">
+                            <td colspan="5" class="vacio">No hay personal activo para controlar.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

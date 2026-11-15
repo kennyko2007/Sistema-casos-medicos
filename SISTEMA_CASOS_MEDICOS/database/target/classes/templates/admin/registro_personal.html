@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Registro de Personal')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
+
+    <!-- Fondo a pantalla completa -->
+    <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
+
+    <main class="adm-wrap estrecho">
+        <section class="adm-card">
+            <h1 class="adm-title">Registro de <em>personal</em></h1>
+            <p class="adm-sub">Doctores y enfermeros/as. Nadie externo puede registrarse por su cuenta.</p>
+
+            <div th:if="${param.exito}" class="adm-msg adm-msg-ok">
+                Personal registrado correctamente.
+            </div>
+
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <th:block th:switch="${param.error[0]}">
+                    <span th:case="'duplicado'">Ese nombre de usuario o correo ya está registrado.</span>
+                    <span th:case="'datos'">Revisa el rol, el usuario (3 a 50 caracteres: letras, números, punto, guion) y el nombre.</span>
+                    <span th:case="'clave'">La contraseña debe tener al menos 6 caracteres.</span>
+                    <span th:case="'cv'">El CV debe ser un PDF válido de máximo 5 MB.</span>
+                    <span th:case="*">No se pudo registrar al personal. Intenta de nuevo.</span>
+                </th:block>
+            </div>
+
+            <form id="formPersonal" th:action="@{/admin/personal/guardar}" method="post" enctype="multipart/form-data" autocomplete="off">
+                <div class="adm-field">
+                    <label class="adm-label" for="rol">Cargo</label>
+                    <select id="rol" name="rol" class="adm-input" required>
+                        <option value="doctor">Doctor/a</option>
+                        <option value="enfermero">Enfermero/a</option>
+                    </select>
+                </div>
+
+                <div class="adm-grid2">
+                    <div class="adm-field">
+                        <label class="adm-label" for="username">Usuario</label>
+                        <input id="username" type="text" name="username" class="adm-input" required
+                               minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]+" placeholder="Ej. dr.perez">
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="password">Contraseña temporal</label>
+                        <input id="password" type="password" name="password" class="adm-input" required
+                               minlength="6" placeholder="Mínimo 6 caracteres">
+                    </div>
+                </div>
+
+                <div class="adm-field">
+                    <label class="adm-label" for="nombreCompleto">Nombre completo</label>
+                    <input id="nombreCompleto" type="text" name="nombreCompleto" class="adm-input" required
+                           maxlength="150" placeholder="Ej. Dra. Ana Rojas Quiroga">
+                </div>
+
+                <div class="adm-grid2">
+                    <div class="adm-field">
+                        <label class="adm-label" for="telefono">Teléfono</label>
+                        <input id="telefono" type="text" name="telefono" class="adm-input" maxlength="20" placeholder="Ej. 70123456">
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="correo">Correo institucional (opcional)</label>
+                        <input id="correo" type="email" name="correo" class="adm-input" maxlength="100" placeholder="personal@luxehealth.com">
+                    </div>
+                </div>
+                <div class="adm-field">
+                    <label class="adm-label" for="cvPdf">CV en PDF (opcional, máx. 5 MB)</label>
+                    <input id="cvPdf" type="file" name="cvPdf" class="adm-input" accept="application/pdf,.pdf">
+                    <p class="adm-hint">Solo lo verán el administrador y el CEO. También puedes subirlo después desde el directorio.</p>
+                </div>
+                <!-- Solo doctores -->
+                <div id="bloqueDoctor">
+                    <div class="adm-field">
+                        <span class="adm-label">Especialidades</span>
+                        <div class="adm-checks">
+                            <label th:each="esp : ${especialidades}" th:unless="${esp.nombre == 'Medicina General'}">
+                                <input type="checkbox" name="especialidades" th:value="${esp.id}">
+                                <span th:text="${esp.nombre}">Cardiología</span>
+                            </label>
+                        </div>
+                        <p class="adm-hint">Medicina General se asigna automáticamente a todo doctor.</p>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="cvResumen">Resumen del currículum</label>
+                        <textarea id="cvResumen" name="cvResumen" class="adm-input" maxlength="5000"
+                                  placeholder="Trayectoria, formación y experiencia"></textarea>
+                    </div>
+                </div>
+
+                <!-- Solo enfermeros/as -->
+                <div id="bloqueEnfermero" style="display:none">
+                    <div class="adm-field">
+                        <label class="adm-label" for="idDoctor">Doctor/a al que apoyará</label>
+                        <select id="idDoctor" name="idDoctor" class="adm-input">
+                            <option value="">Sin asignar por ahora</option>
+                            <option th:each="d : ${doctores}" th:value="${d.id}" th:text="${d.nombre_completo}">Dr. Nombre</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="adm-btn adm-btn-block">Registrar personal</button>
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <script>
+        (function () {
+            var rol = document.getElementById('rol');
+            var bloqueDoctor = document.getElementById('bloqueDoctor');
+            var bloqueEnfermero = document.getElementById('bloqueEnfermero');
+            function actualizar() {
+                var esDoctor = rol.value === 'doctor';
+                bloqueDoctor.style.display = esDoctor ? 'block' : 'none';
+                bloqueEnfermero.style.display = esDoctor ? 'none' : 'block';
+            }
+            rol.addEventListener('change', actualizar);
+                        document.getElementById('formPersonal').addEventListener('submit', function (e) {
+                var f = document.getElementById('cvPdf').files[0];
+                if (f && f.size > 5242880) {
+                    e.preventDefault();
+                    alert('El PDF del CV supera 5 MB.');
+                }
+            });
+            actualizar();
+        })();
+    </script>
+</body>
+</html>

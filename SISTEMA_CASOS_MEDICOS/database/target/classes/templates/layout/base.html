@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">LuxeHealth</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <!-- Barra de navegación: los enlaces cambian según el rol -->
+    <header th:fragment="navbar" class="site-header">
+        <div class="header-left">
+            <span class="brand">LUXE <span>HEALTH</span></span>
+
+            <nav class="nav-links" aria-label="Principal">
+                <!-- PACIENTE -->
+                <th:block sec:authorize="hasAuthority('paciente')">
+                    <a th:href="@{/paciente/portal}">Inicio</a>
+                    <a th:href="@{/paciente/chat}">Chat con mi doctor</a>
+                </th:block>
+
+                <!-- DOCTOR -->
+                <th:block sec:authorize="hasAuthority('doctor')">
+                    <a th:href="@{/medico/atencion}">Atención</a>
+                    <a th:href="@{/medico/historico_pacientes}">Historial de pacientes</a>
+                </th:block>
+
+                <!-- ENFERMERO/A -->
+                <th:block sec:authorize="hasAuthority('enfermero')">
+                    <a th:href="@{/enfermeria/inicio}">Inicio</a>
+                </th:block>
+
+                <!-- ADMIN (las rutas /recepcion pasarán a /admin) -->
+                <th:block sec:authorize="hasAuthority('admin')">
+                    <a th:href="@{/admin/registro_paciente}">+ Paciente</a>
+                    <a th:href="@{/admin/registro_personal}">+ Personal</a>
+                    <a th:href="@{/admin/directorio}">Directorio</a>
+                    <a th:href="@{/admin/asistencia}">Asistencia</a>
+                </th:block>
+
+                <!-- CEO -->
+                <th:block sec:authorize="hasAuthority('ceo')">
+                    <a th:href="@{/ceo/dashboard}">Panel general</a>
+                    <a th:href="@{/ceo/doctores}">Doctores</a>
+                    <a th:href="@{/ceo/enfermeros}">Enfermeros</a>
+                    <a th:href="@{/ceo/pacientes}">Pacientes</a>
+                    <a th:href="@{/ceo/asistencia}">Asistencia</a>
+                </th:block>
+            </nav>
+        </div>
+
+        <div class="header-right">
+            <div class="user-box">
+                <span class="user-name" sec:authentication="name">usuario</span>
+                <span class="role-tag" sec:authorize="hasAuthority('paciente')">Paciente</span>
+                <span class="role-tag" sec:authorize="hasAuthority('doctor')">Doctor</span>
+                <span class="role-tag" sec:authorize="hasAuthority('enfermero')">Enfermería</span>
+                <span class="role-tag" sec:authorize="hasAuthority('admin')">Administrador</span>
+                <span class="role-tag" sec:authorize="hasAuthority('ceo')">CEO</span>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-danger-soft">Cerrar sesión</button>
+            </form>
+        </div>
+
+        <script>
+            document.querySelectorAll('.nav-links a').forEach(function (a) {
+                if (a.pathname === location.pathname) { a.setAttribute('aria-current', 'page'); }
+            });
+        </script>
+    </header>
+
+    <footer th:fragment="footer" class="site-footer">
+        LuxeHealth · Sistema de gestión hospitalaria
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Mis casos clínicos')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/paciente-ui :: estilos}"></th:block>
+    <div th:replace="~{layout/paciente-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Mis casos <em>clínicos</em></h1>
+                    <p class="adm-sub">Tu historia clínica, la recomendación de tu doctor y los medicamentos de cada atención.</p>
+                </div>
+                <a th:href="@{/paciente/portal}" class="adm-btn adm-btn-ghost adm-btn-sm">← Volver a mi portal</a>
+            </div>
+
+            <div th:if="${error}" class="adm-msg adm-msg-error" th:text="${error}">Mensaje</div>
+
+            <th:block th:if="${paciente != null}">
+
+                <article class="pac-atencion" th:each="h : ${historial}" th:with="meds=${medicamentos[h.id_atencion]}">
+                    <div class="pac-atencion-head">
+                        <div>
+                            <strong th:text="${h.titulo_caso}">Título del caso</strong>
+                            <p class="pac-meta" th:text="|${h.especialidad} · ${h.doctor}|">Cardiología · Dr. Nombre</p>
+                        </div>
+                        <span class="adm-pill" th:text="${h.fecha_atencion}">2026-11-08</span>
+                    </div>
+
+                    <div class="pac-atencion-body">
+                        <div class="pac-pdf">
+                            <b>Historia clínica (PDF)</b>
+                            <a th:if="${h.pdf_ruta != null}" th:href="@{/documentos/atencion/{id}(id=${h.id_atencion})}"
+                               target="_blank" rel="noopener" class="adm-btn adm-btn-sm">Ver PDF</a>
+                            <span th:unless="${h.pdf_ruta != null}" class="adm-pill">PDF en preparación</span>
+                        </div>
+                        <div class="pac-reco">
+                            <b>Recomendación del doctor</b>
+                            <p th:text="${h.recomendacion}"
+                               th:classappend="${h.recomendacion == 'Sin recomendaciones'} ? 'pac-reco-vacia'">Recomendación</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${not #lists.isEmpty(meds)}" class="adm-table-wrap">
+                        <table class="adm-table">
+                            <thead>
+                                <tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Indicaciones</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="m : ${meds}">
+                                    <td th:text="${m.nombre}">Losartán</td>
+                                    <td th:text="${m.dosis} ?: '—'">50 mg</td>
+                                    <td th:text="${m.frecuencia} ?: '—'">Cada 24 horas</td>
+                                    <td th:text="${m.duracion} ?: '—'">30 días</td>
+                                    <td th:text="${m.indicaciones} ?: '—'">Tomar por la mañana</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p th:if="${#lists.isEmpty(meds)}" class="adm-hint" style="margin:0">Sin medicamentos recetados en esta atención.</p>
+                </article>
+
+                <p th:if="${#lists.isEmpty(historial)}" class="adm-hint" style="margin:0">Aún no tienes atenciones registradas.</p>
+            </th:block>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

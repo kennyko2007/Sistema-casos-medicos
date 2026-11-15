@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Editar usuario')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
+
+    <!-- Fondo a pantalla completa -->
+    <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
+
+    <main class="adm-wrap estrecho">
+        <section class="adm-card">
+            <h1 class="adm-title">Editar <em th:text="${usuario.rol}">paciente</em></h1>
+            <p class="adm-sub">
+                Cuenta <strong th:text="${usuario.username}">usuario</strong>.
+                <span th:unless="${usuario.activo}" class="adm-pill adm-pill-bad">Deshabilitada</span>
+            </p>
+
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <th:block th:switch="${param.error[0]}">
+                    <span th:case="'duplicado'">Ese correo ya pertenece a otra cuenta.</span>
+                    <span th:case="'datos'">El nombre completo es obligatorio.</span>
+                    <span th:case="'clave'">La nueva contraseña debe tener al menos 6 caracteres.</span>
+                    <span th:case="'sangre'">El tipo de sangre no es válido.</span>
+                    <span th:case="'fecha'">La fecha de nacimiento no puede ser futura.</span>
+                    <span th:case="*">No se pudieron guardar los cambios.</span>
+                </th:block>
+            </div>
+
+            <form th:action="@{/admin/usuarios/{id}/actualizar(id=${usuario.id})}" method="post" autocomplete="off">
+                <div class="adm-field">
+                    <label class="adm-label">Usuario (no se puede cambiar)</label>
+                    <input type="text" class="adm-input" th:value="${usuario.username}" disabled>
+                </div>
+
+                <div class="adm-field">
+                    <label class="adm-label" for="nombreCompleto">Nombre completo</label>
+                    <input id="nombreCompleto" type="text" name="nombreCompleto" class="adm-input" required
+                           maxlength="150" th:value="${perfil?.nombre_completo}">
+                </div>
+
+                <div class="adm-grid2">
+                    <div class="adm-field">
+                        <label class="adm-label" for="telefono">Teléfono</label>
+                        <input id="telefono" type="text" name="telefono" class="adm-input" maxlength="20"
+                               th:value="${perfil?.telefono}">
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="correo">Correo (opcional)</label>
+                        <input id="correo" type="email" name="correo" class="adm-input" maxlength="100"
+                               th:value="${usuario.correo}">
+                    </div>
+                </div>
+
+                <!-- Solo pacientes -->
+                <div class="adm-grid2" th:if="${usuario.rol == 'paciente'}">
+                    <div class="adm-field">
+                        <label class="adm-label" for="fechaNacimiento">Fecha de nacimiento</label>
+                        <input id="fechaNacimiento" type="date" name="fechaNacimiento" class="adm-input"
+                               th:value="${perfil?.fecha_nacimiento}">
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="tipoSangre">Tipo de sangre</label>
+                        <select id="tipoSangre" name="tipoSangre" class="adm-input">
+                            <option value="">No indicado</option>
+                            <option th:each="t : ${#strings.arraySplit('O+,O-,A+,A-,B+,B-,AB+,AB-', ',')}"
+                                    th:value="${t}" th:text="${t}"
+                                    th:selected="${perfil?.tipo_sangre == t}">O+</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Solo doctores -->
+                <div class="adm-field" th:if="${usuario.rol == 'doctor'}">
+                    <label class="adm-label" for="cvResumen">Resumen del currículum</label>
+                    <textarea id="cvResumen" name="cvResumen" class="adm-input" maxlength="5000"
+                              th:text="${perfil?.cv_resumen}"></textarea>
+                </div>
+
+                <div class="adm-field">
+                    <label class="adm-label" for="nuevaPassword">Nueva contraseña (opcional)</label>
+                    <input id="nuevaPassword" type="password" name="nuevaPassword" class="adm-input"
+                           minlength="6" placeholder="Déjala vacía para no cambiarla">
+                    <p class="adm-hint">Al cambiarla también se desbloquea la cuenta y se reinician los intentos fallidos.</p>
+                </div>
+
+                <div class="adm-acciones">
+                    <button type="submit" class="adm-btn">Guardar cambios</button>
+                    <a th:href="@{/admin/directorio}" class="adm-btn adm-btn-ghost">Cancelar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>
