@@ -79,5 +79,24 @@
         </div>
     </main>
 
+    <!-- Respaldo del ojo: funciona aunque app.js no se haya recargado -->
+    <script>
+        (function () {
+            var boton = document.querySelector('[data-pass-toggle]');
+            if (!boton || boton.dataset.passListo === '1') { return; }
+            var wrap = boton.closest('.pass-wrap');
+            var input = wrap ? wrap.querySelector('input') : null;
+            if (!input) { return; }
+
+            boton.dataset.passListo = '1';
+            boton.addEventListener('click', function () {
+                var mostrar = input.type === 'password';
+                input.type = mostrar ? 'text' : 'password';
+                boton.setAttribute('aria-pressed', String(mostrar));
+                boton.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                input.focus({ preventScroll: true });
+            });
+        })();
+    </script>
 </body>
 </html>

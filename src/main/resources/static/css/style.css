@@ -418,7 +418,7 @@ a { color: var(--blue); }
 .pass-wrap { position: relative; }
 .pass-wrap input { padding-right: 2.6rem; }
 .pass-toggle {
-    position: absolute; top: 50%; right: 0.15rem;
+    position: absolute; top: 50%; right: 0.15rem; z-index: 2;
     transform: translateY(-50%);
     width: 34px; height: 34px;
     display: grid; place-items: center;
@@ -427,6 +427,8 @@ a { color: var(--blue); }
     color: #64748b;
     cursor: pointer;
 }
+.pass-wrap input::-ms-reveal,
+.pass-wrap input::-ms-clear { display: none; }
 .pass-toggle:hover { color: var(--navy); background: rgba(11, 111, 194, 0.08); }
 .pass-toggle:focus-visible { outline: 2px solid rgba(11, 111, 194, 0.55); outline-offset: 1px; }
 .pass-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

@@ -88,10 +88,12 @@
     /* 4. Mostrar / ocultar contraseña                                     */
     /* ------------------------------------------------------------------ */
     D.querySelectorAll('[data-pass-toggle]').forEach(function (boton) {
+        if (boton.dataset.passListo === '1') { return; }   // ya lo activó el script del login
         var wrap = boton.closest('.pass-wrap');
         var input = wrap ? wrap.querySelector('input') : null;
         if (!input) { return; }
 
+        boton.dataset.passListo = '1';
         boton.addEventListener('click', function () {
             var mostrar = input.type === 'password';
             input.type = mostrar ? 'text' : 'password';
