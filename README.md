@@ -52,6 +52,12 @@ y una campanita de notificaciones que avisa al doctor o al paciente cuando llega
 - Al recibir un mensaje suena un aviso breve generado con Web Audio (sin archivos de audio).
   Se puede silenciar con el botón «Sonido» de la campanita o de la cabecera del chat.
 
+### Base de datos
+
+- `migraciones/001_cv_en_base_de_datos.sql`: guarda los CV dentro de MySQL.
+- `migraciones/002_relaciones_e_indices.sql`: agrega claves foráneas, claves únicas e
+  índices. Ejecutar una sola vez y comprobar antes que no existan datos huérfanos.
+
 ## Variables de entorno
 
 | Variable      | Descripción                                    |
