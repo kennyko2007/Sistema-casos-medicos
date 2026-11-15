@@ -1,0 +1,22 @@
+# Maven
+target/
+
+# PDFs subidos / datos de pacientes (nunca al repositorio)
+uploads/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Entorno y secretos
+.env
+*.env
+application-local.properties
+
+# SO
+.DS_Store
+Thumbs.db
