@@ -1,0 +1,206 @@
+/* =========================================================================
+   PANELES INTERNOS (admin, CEO, médico, enfermería y paciente)
+   Fondo fotográfico fijo, tarjetas blancas, tablas, chat y formularios.
+   ========================================================================= */
+
+/* ---------- Fondo global ---------- */
+html { background: #0b1b33; }
+body {
+    background: transparent;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.adm-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: #0b1b33;
+    background-image: var(--hero-image, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.adm-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 27, 51, 0.35);
+}
+
+/* ---------- Marca inferior ---------- */
+footer {
+    flex: 1 0 auto;
+    min-height: 110px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: .7em;
+    padding: 1rem 1rem 2rem !important;
+    background: transparent !important;
+    border: 0 !important;
+    opacity: 1 !important;
+    font-size: 0 !important;
+    line-height: 1;
+}
+footer * { display: none !important; }
+
+footer::before,
+footer::after {
+    font-family: 'Jost', system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(11, 27, 51, 0.95), 0 0 14px rgba(11, 27, 51, 0.85);
+}
+footer::before {
+    content: "LuxeHealth ·";
+    color: #e3b94a;
+}
+footer::after {
+    content: "Sistema de gestión hospitalaria";
+    color: #ffffff;
+    margin-right: -.14em;
+}
+
+/* ---------- Tarjeta principal ---------- */
+.adm-wrap { max-width: 1200px; width: 100%; box-sizing: border-box; margin: 2rem auto 2rem; padding: 0 1rem; position: relative; z-index: 10; font-family: 'Jost', system-ui, sans-serif; color: #0f2340; }
+.adm-wrap.estrecho { max-width: 760px; }
+.adm-card { background: #fff; border-radius: 20px; padding: 2rem; box-shadow: 0 20px 40px rgba(15, 35, 64, 0.28); }
+.adm-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2.2rem; line-height: 1.1; margin: 0 0 .35rem; text-transform: uppercase; letter-spacing: .02em; }
+.adm-title em { font-style: normal; color: #c9a227; }
+.adm-sub { color: #5b6b82; margin: 0 0 1.5rem; }
+
+.adm-msg { padding: .75rem 1rem; border-radius: 10px; margin-bottom: 1rem; font-size: .92rem; }
+.adm-msg-ok { background: #e7f6ef; color: #0b6b46; border: 1px solid #b7e3cf; }
+.adm-msg-error { background: #fdecef; color: #b4132f; border: 1px solid #f5c2cb; }
+
+.adm-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .adm-grid2 { grid-template-columns: 1fr; } }
+
+.adm-field { margin-bottom: 1rem; }
+.adm-label { display: block; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #1570c2; margin-bottom: .35rem; font-weight: 600; }
+.adm-input { width: 100%; box-sizing: border-box; padding: .7rem .85rem; border: 1px solid #d5dde8; border-radius: 10px; font: inherit; background: #fff; color: #0f2340; }
+.adm-input:focus { outline: 2px solid #1570c2; border-color: transparent; }
+.adm-input[disabled] { background: #f3f6fa; color: #5b6b82; }
+textarea.adm-input { min-height: 96px; resize: vertical; }
+.adm-hint { font-size: .8rem; color: #5b6b82; margin-top: .3rem; }
+
+.adm-checks { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+.adm-checks label { display: inline-flex; align-items: center; gap: .4rem; font-size: .95rem; }
+
+.adm-btn { display: inline-block; border: 0; border-radius: 10px; padding: .7rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; background: #1570c2; color: #fff; }
+.adm-btn:hover { filter: brightness(1.08); }
+.adm-btn-block { width: 100%; margin-top: .5rem; }
+.adm-btn-sm { padding: .35rem .7rem; font-size: .8rem; border-radius: 8px; }
+.adm-btn-ghost { background: #eef3f9; color: #0f2340; }
+.adm-btn-danger { background: #c0233f; }
+.adm-btn-ok { background: #0b8a5a; }
+.adm-btn-warn { background: #c98a0a; }
+.adm-btn-gris { background: #6b7a90; }
+
+.adm-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; }
+.adm-tab { padding: .4rem .95rem; border-radius: 999px; background: #eef3f9; color: #0f2340; text-decoration: none; font-size: .85rem; }
+.adm-tab.activo { background: #0f2340; color: #fff; }
+
+.adm-table-wrap { overflow-x: auto; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.adm-table th { text-align: left; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: #5b6b82; padding: .6rem .75rem; border-bottom: 2px solid #e3e9f1; white-space: nowrap; }
+.adm-table td { padding: .7rem .75rem; border-bottom: 1px solid #edf1f6; vertical-align: middle; }
+.adm-table tr.inactivo td { opacity: .55; }
+.adm-table .vacio { text-align: center; color: #5b6b82; padding: 2rem; }
+.adm-table tr[hidden] { display: none; }
+.tabla-tools { display: flex; align-items: flex-end; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin: 0 0 .75rem; }
+.tabla-search { position: relative; flex: 1 1 240px; max-width: 380px; }
+.tabla-search svg { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; fill: none; stroke: #5b6b82; stroke-width: 2; stroke-linecap: round; }
+.tabla-search .adm-input { padding-left: 2.15rem; }
+.tabla-meta { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+.tabla-info { font-size: .8rem; color: #5b6b82; }
+.tabla-page-size { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: #5b6b82; }
+.tabla-page-size[hidden] { display: none; }
+.tabla-page-size .adm-input { width: auto; padding: .4rem 1.9rem .4rem .6rem; }
+.tabla-pager { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; margin: .9rem 0 0; }
+.tabla-pager[hidden] { display: none; }
+.tabla-pager button { min-width: 34px; height: 34px; padding: 0 .5rem; border: 1px solid #d5dde8; border-radius: 9px; background: #fff; color: #0f2340; font: inherit; font-size: .85rem; cursor: pointer; }
+.tabla-pager button:hover:not(:disabled) { border-color: #1570c2; color: #1570c2; }
+.tabla-pager button[aria-current="page"] { background: #1570c2; border-color: #1570c2; color: #fff; font-weight: 600; }
+.tabla-pager button:disabled { opacity: .45; cursor: default; }
+.tabla-sin-resultados td { text-align: center; color: #5b6b82; padding: 1.6rem; }
+.adm-cap { text-transform: capitalize; }
+
+.adm-pill { display: inline-block; padding: .15rem .65rem; border-radius: 999px; font-size: .75rem; font-weight: 600; background: #eef3f9; color: #33465f; white-space: nowrap; }
+.adm-pill-ok { background: #e7f6ef; color: #0b6b46; }
+.adm-pill-warn { background: #fdf3dc; color: #8a5a00; }
+.adm-pill-bad { background: #fdecef; color: #b4132f; }
+
+.adm-acciones { display: flex; flex-wrap: wrap; gap: .4rem; }
+.adm-rowform { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.adm-rowform .adm-input { width: 200px; padding: .4rem .6rem; font-size: .85rem; }
+.adm-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+
+/* ---------- Médico ---------- */
+.med-grid { display: grid; grid-template-columns: 300px 1fr; gap: 1.25rem; align-items: start; }
+@media (max-width: 900px) { .med-grid { grid-template-columns: 1fr; } }
+
+.med-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.med-item { display: block; padding: .75rem .9rem; border-radius: 12px; background: #f5f8fc; color: #0f2340; text-decoration: none; border: 1px solid transparent; font-size: .92rem; }
+.med-item:hover { border-color: #c7d6e8; }
+.med-item.activo { background: #0f2340; color: #fff; }
+.med-item small { display: block; opacity: .75; margin-top: .15rem; }
+
+.med-box { border: 1px solid #e3e9f1; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1.25rem; }
+.med-box h3 { margin: 0 0 .8rem; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; text-transform: uppercase; letter-spacing: .02em; }
+.med-box h3 em { font-style: normal; color: #c9a227; }
+.med-dato { margin: 0 0 .5rem; font-size: .93rem; }
+.med-dato b { color: #1570c2; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; display: block; }
+
+.plantilla[hidden] { display: none; }
+
+.med-meds-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr auto; gap: .5rem; margin-bottom: .5rem; align-items: center; }
+@media (max-width: 900px) { .med-meds-row { grid-template-columns: 1fr 1fr; } }
+
+.med-chat { display: flex; flex-direction: column; height: 520px; border: 1px solid #e3e9f1; border-radius: 14px; overflow: hidden; }
+.med-chat-head { padding: .8rem 1rem; background: #0f2340; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.med-chat-quien span { display: block; font-weight: 600; }
+.med-chat-head small { display: block; opacity: .75; }
+.med-chat-estado { display: flex; align-items: center; gap: .6rem; }
+.med-chat-sonido { border: 1px solid rgba(255, 255, 255, .35); background: transparent; color: #fff; border-radius: 999px; font: inherit; font-size: .72rem; padding: .25rem .6rem; cursor: pointer; }
+.med-chat-sonido:hover { background: rgba(255, 255, 255, .12); }
+.med-chat-sonido.sonido-apagado { opacity: .6; }
+.med-chat-typing { display: inline-flex; align-items: center; gap: .4rem; font-size: .72rem; color: #cfe3ff; }
+.med-chat-typing[hidden] { display: none; }
+.med-chat-typing .puntos { display: inline-flex; gap: 3px; }
+.med-chat-typing .puntos i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: escribiendo 1.2s infinite ease-in-out; }
+.med-chat-typing .puntos i:nth-child(2) { animation-delay: .18s; }
+.med-chat-typing .puntos i:nth-child(3) { animation-delay: .36s; }
+@keyframes escribiendo {
+    0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+    30% { transform: translateY(-3px); opacity: 1; }
+}
+.med-chat-msgs { flex: 1; overflow-y: auto; padding: 1rem; background: #eef3f9; display: flex; flex-direction: column; gap: .5rem; }
+.burbuja { max-width: 70%; padding: .55rem .8rem; border-radius: 14px; font-size: .93rem; line-height: 1.35; word-wrap: break-word; }
+.burbuja time { display: block; font-size: .68rem; opacity: .65; margin-top: .2rem; text-align: right; }
+.burbuja-mia { align-self: flex-end; background: #d6ecff; border-bottom-right-radius: 4px; }
+.burbuja-otro { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; }
+.med-chat-form { display: flex; gap: .5rem; padding: .7rem; background: #fff; border-top: 1px solid #e3e9f1; }
+.med-chat-form .adm-input { flex: 1; }
+
+/* ---------- Paciente ---------- */
+.pac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.pac-caso { border: 1px solid #e3e9f1; border-radius: 14px; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .5rem; }
+.pac-caso h4 { margin: 0; font-size: 1.05rem; color: #0f2340; }
+.pac-meta { color: #5b6b82; font-size: .85rem; margin: 0; }
+.pac-caso .adm-btn { margin-top: auto; text-align: center; }
+
+.pac-atencion { border: 1px solid #e3e9f1; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+.pac-atencion-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: .8rem; }
+.pac-atencion-head strong { color: #0f2340; }
+.pac-atencion-body { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; margin-bottom: .8rem; }
+@media (max-width: 700px) { .pac-atencion-body { grid-template-columns: 1fr; } }
+.pac-pdf, .pac-reco { background: #f5f8fc; border-radius: 12px; padding: .8rem 1rem; }
+.pac-pdf b, .pac-reco b { display: block; color: #1570c2; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .4rem; }
+.pac-reco p { margin: 0; font-size: .95rem; }
+.pac-reco-vacia { color: #5b6b82; font-style: italic; }

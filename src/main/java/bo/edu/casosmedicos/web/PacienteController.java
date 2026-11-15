@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import bo.edu.casosmedicos.chat.AvisosWebSocketHandler;
+import bo.edu.casosmedicos.chat.NotificacionesService;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,9 +24,14 @@ public class PacienteController {
     private static final int MAX_MENSAJE = 1000;
 
     private final JdbcTemplate jdbcTemplate;
+    private final NotificacionesService notificaciones;
+    private final AvisosWebSocketHandler avisos;
 
-    public PacienteController(JdbcTemplate jdbcTemplate) {
+    public PacienteController(JdbcTemplate jdbcTemplate, NotificacionesService notificaciones,
+                              AvisosWebSocketHandler avisos) {
         this.jdbcTemplate = jdbcTemplate;
+        this.notificaciones = notificaciones;
+        this.avisos = avisos;
     }
 
     /** Perfil del paciente a partir del username con el que inició sesión. */
@@ -172,6 +179,7 @@ public class PacienteController {
             jdbcTemplate.update(
                 "INSERT INTO mensajes_chat (id_caso, remitente, mensaje) VALUES (?, 'paciente', ?)",
                 idCaso, texto);
+            avisos.enviarResumen(notificaciones.usuarioContraparte(idCaso, "paciente"));
         }
         return "redirect:/paciente/chat/" + idCaso;
     }

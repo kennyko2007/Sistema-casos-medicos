@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Atención')}"></head>
+<head th:replace="~{layout/base :: headPanel('Atención')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/medico-ui :: estilos}"></th:block>
     <div th:replace="~{layout/medico-ui :: fondo}"></div>
 
     <main class="adm-wrap">

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Directorio')}"></head>
+<head th:replace="~{layout/base :: headPanel('Directorio')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
 
     <!-- Fondo a pantalla completa -->
     <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>

@@ -35,10 +35,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
+    private final NotificacionesService notificaciones;
+    private final AvisosWebSocketHandler avisos;
 
-    public ChatWebSocketHandler(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    public ChatWebSocketHandler(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper,
+                                NotificacionesService notificaciones, AvisosWebSocketHandler avisos) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
+        this.notificaciones = notificaciones;
+        this.avisos = avisos;
     }
 
     @Override
@@ -66,8 +71,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         try {
             switch (nodo.path("tipo").asText("")) {
-                case "mensaje" -> guardarYDifundir(idCaso, rol, nodo.path("mensaje").asText(""));
-                case "leido" -> marcarLeidos(idCaso, rol);
+                case "mensaje" -> {
+                    guardarYDifundir(idCaso, rol, nodo.path("mensaje").asText(""));
+                    avisarContraparte(idCaso, rol);
+                }
+                case "leido" -> {
+                    marcarLeidos(idCaso, rol);
+                    avisos.enviarResumen(usuarioDe(session));
+                }
+                case "escribiendo" -> avisarEscribiendo(idCaso, rol);
                 default -> { /* se ignora */ }
             }
         } catch (Exception e) {
@@ -118,6 +130,19 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             idCaso, otro);
     }
 
+    /** La campanita del destinatario se actualiza aunque no tenga el chat abierto. */
+    private void avisarContraparte(Long idCaso, String rol) {
+        avisos.enviarResumen(notificaciones.usuarioContraparte(idCaso, rol));
+    }
+
+    /** "Escribiendo…" solo se difunde; no se guarda en la base de datos. */
+    private void avisarEscribiendo(Long idCaso, String rol) throws JsonProcessingException {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("tipo", "escribiendo");
+        payload.put("remitente", rol);
+        difundir(idCaso, objectMapper.writeValueAsString(payload));
+    }
+
     private void difundir(Long idCaso, String json) {
         Set<WebSocketSession> sala = salas.get(idCaso);
         if (sala == null) {
@@ -151,5 +176,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private static Long idCaso(WebSocketSession session) {
         return (Long) session.getAttributes().get(ChatHandshakeInterceptor.ATTR_CASO);
+    }
+
+    private static String usuarioDe(WebSocketSession session) {
+        return (String) session.getAttributes().get(ChatHandshakeInterceptor.ATTR_USUARIO);
     }
 }

@@ -18,6 +18,7 @@ public class ChatHandshakeInterceptor implements HandshakeInterceptor {
 
     public static final String ATTR_CASO = "idCaso";
     public static final String ATTR_ROL = "rol";
+    public static final String ATTR_USUARIO = "usuario";
 
     private static final String SQL_DOCTOR =
         "SELECT COUNT(*) FROM casos_medicos cm " +
@@ -73,6 +74,7 @@ public class ChatHandshakeInterceptor implements HandshakeInterceptor {
 
         attributes.put(ATTR_CASO, idCaso);
         attributes.put(ATTR_ROL, rol);
+        attributes.put(ATTR_USUARIO, auth.getName());
         return true;
     }
 

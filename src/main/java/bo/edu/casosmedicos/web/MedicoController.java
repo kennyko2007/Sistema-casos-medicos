@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import bo.edu.casosmedicos.pdf.AtencionPdfService;
+import bo.edu.casosmedicos.chat.AvisosWebSocketHandler;
+import bo.edu.casosmedicos.chat.NotificacionesService;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -48,13 +50,18 @@ public class MedicoController {
     private final ObjectMapper objectMapper;
     private final TransactionTemplate tx;
     private final AtencionPdfService pdfService;
+    private final NotificacionesService notificaciones;
+    private final AvisosWebSocketHandler avisos;
 
     public MedicoController(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper,
-                            PlatformTransactionManager txManager, AtencionPdfService pdfService) {
+                            PlatformTransactionManager txManager, AtencionPdfService pdfService,
+                            NotificacionesService notificaciones, AvisosWebSocketHandler avisos) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
         this.tx = new TransactionTemplate(txManager);
         this.pdfService = pdfService;
+        this.notificaciones = notificaciones;
+        this.avisos = avisos;
     }
 
     // ------------------------------------------------------------------ utilidades
@@ -382,6 +389,7 @@ public class MedicoController {
             jdbcTemplate.update(
                 "INSERT INTO mensajes_chat (id_caso, remitente, mensaje) VALUES (?, 'doctor', ?)",
                 idCaso, texto);
+            avisos.enviarResumen(notificaciones.usuarioContraparte(idCaso, "doctor"));
         }
         return "redirect:/medico/chat/" + idCaso;
     }

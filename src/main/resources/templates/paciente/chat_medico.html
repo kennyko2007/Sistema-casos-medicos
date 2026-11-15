@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Chat con mi doctor')}"></head>
+<head th:replace="~{layout/base :: headPanel('Chat con mi doctor')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/paciente-ui :: estilos}"></th:block>
     <div th:replace="~{layout/paciente-ui :: fondo}"></div>
 
     <main class="adm-wrap estrecho">
@@ -19,8 +18,16 @@
 
             <div class="med-chat">
                 <div class="med-chat-head">
-                    <span th:text="${caso.nombre_doctor}">Dr. Nombre</span>
-                    <small th:text="|${caso.titulo_caso} · ${caso.estado}|">Caso · Estado</small>
+                    <div class="med-chat-quien">
+                        <span th:text="${caso.nombre_doctor}">Dr. Nombre</span>
+                        <small th:text="|${caso.titulo_caso} · ${caso.estado}|">Caso · Estado</small>
+                    </div>
+                    <div class="med-chat-estado">
+                        <span class="med-chat-typing" id="chat-escribiendo" hidden>
+                            <span class="puntos" aria-hidden="true"><i></i><i></i><i></i></span> Escribiendo…
+                        </span>
+                        <button type="button" class="med-chat-sonido" data-sonido-toggle aria-pressed="true">Sonido: sí</button>
+                    </div>
                 </div>
 
                 <div class="med-chat-msgs" id="mensajes" th:attr="data-caso=${caso.id},data-yo='paciente'">

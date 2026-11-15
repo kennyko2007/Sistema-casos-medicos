@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Inicio de enfermería')}"></head>
+<head th:replace="~{layout/base :: headPanel('Inicio de enfermería')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/enfermeria-ui :: estilos}"></th:block>
     <div th:replace="~{layout/enfermeria-ui :: fondo}"></div>
 
     <main class="adm-wrap">
@@ -39,7 +38,7 @@
                 <div class="med-box">
                     <h3>Mi <em>horario</em></h3>
                     <div class="adm-table-wrap" th:if="${not #lists.isEmpty(horarios)}">
-                        <table class="adm-table">
+                        <table class="adm-table" data-sin-filtro>
                             <thead><tr><th>Día</th><th>Entrada</th><th>Salida</th></tr></thead>
                             <tbody>
                                 <tr th:each="h : ${horarios}">

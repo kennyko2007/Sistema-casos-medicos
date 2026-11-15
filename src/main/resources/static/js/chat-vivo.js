@@ -9,15 +9,40 @@
     var form = document.querySelector('.med-chat-form');
     var input = form ? form.querySelector('input[name="mensaje"]') : null;
     var estado = document.getElementById('chat-estado');
+    var escribiendo = document.getElementById('chat-escribiendo');
 
     var ws = null;
     var abierto = false;
     var intentos = 0;
     var MAX_INTENTOS = 8;
 
+    var ultimoAviso = 0;
+    var ESPERA_AVISO = 1500;
+    var ocultarEscribiendoTimer = null;
+
     function bajar() { cont.scrollTop = cont.scrollHeight; }
 
     function mostrarEstado(texto) { if (estado) { estado.textContent = texto; } }
+
+    function mostrarEscribiendo() {
+        if (!escribiendo) { return; }
+        escribiendo.hidden = false;
+        clearTimeout(ocultarEscribiendoTimer);
+        ocultarEscribiendoTimer = setTimeout(ocultarEscribiendo, 3000);
+    }
+
+    function ocultarEscribiendo() {
+        clearTimeout(ocultarEscribiendoTimer);
+        if (escribiendo) { escribiendo.hidden = true; }
+    }
+
+    function avisarEscribiendo() {
+        if (!abierto || !ws || ws.readyState !== WebSocket.OPEN) { return; }
+        var ahora = Date.now();
+        if (ahora - ultimoAviso < ESPERA_AVISO) { return; }
+        ultimoAviso = ahora;
+        ws.send(JSON.stringify({ tipo: 'escribiendo' }));
+    }
 
     function agregar(m) {
         var vacio = cont.querySelector('.adm-hint');
@@ -52,15 +77,25 @@
         ws.onmessage = function (e) {
             var m;
             try { m = JSON.parse(e.data); } catch (err) { return; }
+
+            if (m.tipo === 'escribiendo') {
+                if (m.remitente !== yo) { mostrarEscribiendo(); }
+                return;
+            }
             if (m.tipo !== 'mensaje') { return; }
+
+            ocultarEscribiendo();
             agregar(m);
+
             if (m.remitente !== yo) {            // lo estoy viendo: queda leído
+                if (window.SonidoAviso) { window.SonidoAviso.reproducir(); }
                 ws.send(JSON.stringify({ tipo: 'leido' }));
             }
         };
 
         ws.onclose = function () {
             abierto = false;
+            ocultarEscribiendo();
             if (intentos >= MAX_INTENTOS) {
                 mostrarEstado('Sin conexión en vivo. Recarga la página.');
                 return;
@@ -70,6 +105,12 @@
             mostrarEstado('Reconectando…');
             setTimeout(conectar, espera);
         };
+    }
+
+    if (input) {
+        input.addEventListener('input', function () {
+            if (input.value.trim()) { avisarEscribiendo(); }
+        });
     }
 
     if (form && input) {

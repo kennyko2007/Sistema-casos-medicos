@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/documentos/cv/**").hasAnyAuthority("admin", "ceo")
                 .requestMatchers("/documentos/atencion/**").hasAnyAuthority("doctor", "paciente", "ceo", "enfermero")
                 // Chat en vivo: solo paciente y doctor (el caso se valida en ChatHandshakeInterceptor)
-                .requestMatchers("/ws/chat").hasAnyAuthority("paciente", "doctor")
+                .requestMatchers("/ws/chat", "/ws/avisos").hasAnyAuthority("paciente", "doctor")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

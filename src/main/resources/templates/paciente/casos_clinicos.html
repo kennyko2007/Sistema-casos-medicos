@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Mis casos clínicos')}"></head>
+<head th:replace="~{layout/base :: headPanel('Mis casos clínicos')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/paciente-ui :: estilos}"></th:block>
     <div th:replace="~{layout/paciente-ui :: fondo}"></div>
 
     <main class="adm-wrap">
@@ -45,7 +44,7 @@
                     </div>
 
                     <div th:if="${not #lists.isEmpty(meds)}" class="adm-table-wrap">
-                        <table class="adm-table">
+                        <table class="adm-table" data-sin-filtro>
                             <thead>
                                 <tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Indicaciones</th></tr>
                             </thead>

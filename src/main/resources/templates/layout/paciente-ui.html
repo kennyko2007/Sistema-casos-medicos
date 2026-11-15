@@ -2,29 +2,6 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<th:block th:fragment="estilos">
-    <!-- Estilos compartidos (admin-ui + medico-ui: tarjeta, tabla, chat) -->
-    <th:block th:replace="~{layout/medico-ui :: estilos}"></th:block>
-
-    <style>
-        .pac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        .pac-caso { border: 1px solid #e3e9f1; border-radius: 14px; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .5rem; }
-        .pac-caso h4 { margin: 0; font-size: 1.05rem; color: #0f2340; }
-        .pac-meta { color: #5b6b82; font-size: .85rem; margin: 0; }
-        .pac-caso .adm-btn { margin-top: auto; text-align: center; }
-
-        .pac-atencion { border: 1px solid #e3e9f1; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
-        .pac-atencion-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: .8rem; }
-        .pac-atencion-head strong { color: #0f2340; }
-        .pac-atencion-body { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; margin-bottom: .8rem; }
-        @media (max-width: 700px) { .pac-atencion-body { grid-template-columns: 1fr; } }
-        .pac-pdf, .pac-reco { background: #f5f8fc; border-radius: 12px; padding: .8rem 1rem; }
-        .pac-pdf b, .pac-reco b { display: block; color: #1570c2; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .4rem; }
-        .pac-reco p { margin: 0; font-size: .95rem; }
-        .pac-reco-vacia { color: #5b6b82; font-style: italic; }
-    </style>
-</th:block>
-
 <!-- Fondo fijo a pantalla completa con la imagen del paciente -->
 <div th:fragment="fondo">
     <div class="adm-bg" th:style="'--hero-image: url(' + @{/images/INTERFAZPACIENTE.png} + ')'"></div>

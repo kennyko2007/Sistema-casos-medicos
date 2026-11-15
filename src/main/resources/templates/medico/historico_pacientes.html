@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Histórico de pacientes')}"></head>
+<head th:replace="~{layout/base :: headPanel('Histórico de pacientes')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/medico-ui :: estilos}"></th:block>
     <div th:replace="~{layout/medico-ui :: fondo}"></div>
 
     <main class="adm-wrap">
@@ -13,10 +12,6 @@
                 <div>
                     <h1 class="adm-title">Histórico de <em>pacientes</em></h1>
                     <p class="adm-sub">Pacientes que has atendido, <strong th:text="${doctor?.nombre_completo}">Dr. Nombre</strong>.</p>
-                </div>
-                <div class="adm-field" style="min-width:260px">
-                    <label class="adm-label" for="filtro">Buscar</label>
-                    <input id="filtro" type="search" class="adm-input" placeholder="Paciente, caso o especialidad">
                 </div>
             </div>
 
@@ -66,18 +61,5 @@
     </main>
 
     <footer th:replace="~{layout/base :: footer}"></footer>
-
-    <script>
-        (function () {
-            var filtro = document.getElementById('filtro');
-            var filas = document.querySelectorAll('#tablaHistorico tbody tr');
-            filtro.addEventListener('input', function () {
-                var q = filtro.value.trim().toLowerCase();
-                filas.forEach(function (f) {
-                    f.style.display = f.textContent.toLowerCase().indexOf(q) === -1 ? 'none' : '';
-                });
-            });
-        })();
-    </script>
 </body>
 </html>

@@ -2,44 +2,6 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<th:block th:fragment="estilos">
-    <!-- Estilos base compartidos (tarjeta, botones, tabla, fondo, pie) -->
-    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
-
-    <style>
-        .med-grid { display: grid; grid-template-columns: 300px 1fr; gap: 1.25rem; align-items: start; }
-        @media (max-width: 900px) { .med-grid { grid-template-columns: 1fr; } }
-
-        .med-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
-        .med-item { display: block; padding: .75rem .9rem; border-radius: 12px; background: #f5f8fc; color: #0f2340; text-decoration: none; border: 1px solid transparent; font-size: .92rem; }
-        .med-item:hover { border-color: #c7d6e8; }
-        .med-item.activo { background: #0f2340; color: #fff; }
-        .med-item small { display: block; opacity: .75; margin-top: .15rem; }
-
-        .med-box { border: 1px solid #e3e9f1; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1.25rem; }
-        .med-box h3 { margin: 0 0 .8rem; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; text-transform: uppercase; letter-spacing: .02em; }
-        .med-box h3 em { font-style: normal; color: #c9a227; }
-        .med-dato { margin: 0 0 .5rem; font-size: .93rem; }
-        .med-dato b { color: #1570c2; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; display: block; }
-
-        .plantilla[hidden] { display: none; }
-
-        .med-meds-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr auto; gap: .5rem; margin-bottom: .5rem; align-items: center; }
-        @media (max-width: 900px) { .med-meds-row { grid-template-columns: 1fr 1fr; } }
-
-        .med-chat { display: flex; flex-direction: column; height: 520px; border: 1px solid #e3e9f1; border-radius: 14px; overflow: hidden; }
-        .med-chat-head { padding: .8rem 1rem; background: #0f2340; color: #fff; }
-        .med-chat-head small { display: block; opacity: .75; }
-        .med-chat-msgs { flex: 1; overflow-y: auto; padding: 1rem; background: #eef3f9; display: flex; flex-direction: column; gap: .5rem; }
-        .burbuja { max-width: 70%; padding: .55rem .8rem; border-radius: 14px; font-size: .93rem; line-height: 1.35; word-wrap: break-word; }
-        .burbuja time { display: block; font-size: .68rem; opacity: .65; margin-top: .2rem; text-align: right; }
-        .burbuja-mia { align-self: flex-end; background: #d6ecff; border-bottom-right-radius: 4px; }
-        .burbuja-otro { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; }
-        .med-chat-form { display: flex; gap: .5rem; padding: .7rem; background: #fff; border-top: 1px solid #e3e9f1; }
-        .med-chat-form .adm-input { flex: 1; }
-    </style>
-</th:block>
-
 <!-- Fondo fijo a pantalla completa con la imagen del doctor -->
 <div th:fragment="fondo">
     <div class="adm-bg" th:style="'--hero-image: url(' + @{/images/INTERFAZDOCTOR.png} + ')'"></div>

@@ -11,18 +11,26 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final ChatWebSocketHandler handler;
-    private final ChatHandshakeInterceptor interceptor;
+    private final ChatWebSocketHandler chatHandler;
+    private final ChatHandshakeInterceptor chatInterceptor;
+    private final AvisosWebSocketHandler avisosHandler;
+    private final AvisosHandshakeInterceptor avisosInterceptor;
 
-    public WebSocketConfig(ChatWebSocketHandler handler, ChatHandshakeInterceptor interceptor) {
-        this.handler = handler;
-        this.interceptor = interceptor;
+    public WebSocketConfig(ChatWebSocketHandler chatHandler,
+                           ChatHandshakeInterceptor chatInterceptor,
+                           AvisosWebSocketHandler avisosHandler,
+                           AvisosHandshakeInterceptor avisosInterceptor) {
+        this.chatHandler = chatHandler;
+        this.chatInterceptor = chatInterceptor;
+        this.avisosHandler = avisosHandler;
+        this.avisosInterceptor = avisosInterceptor;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // Sin setAllowedOrigins: Spring solo acepta conexiones del mismo origen (http://IP:8080 -> ws://IP:8080)
-        registry.addHandler(handler, "/ws/chat").addInterceptors(interceptor);
+        // Sin setAllowedOrigins: Spring solo acepta conexiones del mismo origen
+        registry.addHandler(chatHandler, "/ws/chat").addInterceptors(chatInterceptor);
+        registry.addHandler(avisosHandler, "/ws/avisos").addInterceptors(avisosInterceptor);
     }
 
     /** Límite de tamaño de mensaje entrante (8 KB). */

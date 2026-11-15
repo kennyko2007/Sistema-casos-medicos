@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Chat con pacientes')}"></head>
+<head th:replace="~{layout/base :: headPanel('Chat con pacientes')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/medico-ui :: estilos}"></th:block>
     <div th:replace="~{layout/medico-ui :: fondo}"></div>
 
     <main class="adm-wrap">
@@ -42,8 +41,16 @@
 
                     <div th:if="${caso != null}" class="med-chat">
                         <div class="med-chat-head">
-                            <span th:text="${caso.nombre_paciente}">Paciente</span>
-                            <small th:text="${caso.titulo_caso}">Caso</small>
+                            <div class="med-chat-quien">
+                                <span th:text="${caso.nombre_paciente}">Paciente</span>
+                                <small th:text="${caso.titulo_caso}">Caso</small>
+                            </div>
+                            <div class="med-chat-estado">
+                                <span class="med-chat-typing" id="chat-escribiendo" hidden>
+                                    <span class="puntos" aria-hidden="true"><i></i><i></i><i></i></span> Escribiendo…
+                                </span>
+                                <button type="button" class="med-chat-sonido" data-sonido-toggle aria-pressed="true">Sonido: sí</button>
+                            </div>
                         </div>
 
                         <!-- data-caso y data-yo los lee chat-vivo.js para conectar el WebSocket -->

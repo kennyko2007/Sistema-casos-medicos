@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/base :: head('Registro de Paciente')}"></head>
+<head th:replace="~{layout/base :: headPanel('Registro de Paciente')}"></head>
 <body>
     <header th:replace="~{layout/base :: navbar}"></header>
 
-    <th:block th:replace="~{layout/admin-ui :: estilos}"></th:block>
 
     <!-- Fondo a pantalla completa -->
     <div th:replace="~{layout/admin-ui :: heroAdmin}"></div>
@@ -38,8 +37,23 @@
                     </div>
                     <div class="adm-field">
                         <label class="adm-label" for="password">Contraseña temporal</label>
-                        <input id="password" type="password" name="password" class="adm-input" required
-                               minlength="6" placeholder="Mínimo 6 caracteres">
+                        <div class="pass-wrap">
+                            <input id="password" type="password" name="password" class="adm-input" required
+                                   minlength="6" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                            <button type="button" class="pass-toggle" data-pass-toggle
+                                    aria-label="Mostrar contraseña" aria-pressed="false">
+                                <svg class="eye" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m3 3 18 18"/>
+                                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                                    <path d="M9.9 5.2A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.6 3.5"/>
+                                    <path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7a10.4 10.4 0 0 0 4.1-.8"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
