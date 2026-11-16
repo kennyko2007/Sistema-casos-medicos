@@ -28,6 +28,8 @@
                     <input id="hasta" type="date" name="hasta" class="adm-input" style="width:180px" th:value="${hasta}">
                 </div>
                 <button type="submit" class="adm-btn adm-btn-sm" style="align-self:flex-end">Filtrar</button>
+                <a th:href="@{/admin/asistencia/registro.csv(desde=${desde},hasta=${hasta})}"
+                   class="adm-btn adm-btn-sm adm-btn-ghost" style="align-self:flex-end">Exportar CSV</a>
             </form>
 
             <div class="adm-table-wrap">

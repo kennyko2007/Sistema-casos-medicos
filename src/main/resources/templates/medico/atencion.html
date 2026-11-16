@@ -33,10 +33,22 @@
                                 <a th:href="@{/medico/atencion(caso=${c.id})}" class="med-item"
                                    th:classappend="${casoActual != null and casoActual.id == c.id} ? 'activo'">
                                     <span th:text="${c.titulo_caso}">Título del caso</span>
-                                    <small th:text="|${c.nombre_paciente} · ${c.estado}|">Paciente · Estado</small>
+                                    <small th:text="|${c.nombre_paciente} · ${c.estado} · ${c.prioridad}|">Paciente · Estado · Prioridad</small>
                                 </a>
                             </li>
                             <li th:if="${#lists.isEmpty(casos)}" class="adm-hint">No tienes casos activos.</li>
+                        </ul>
+                    </div>
+
+                    <div class="med-box">
+                        <h3>Citas de <em>hoy</em></h3>
+                        <ul class="med-lista">
+                            <li th:each="c : ${citasHoy}" class="med-item">
+                                <span th:text="${c.hora}">09:00</span>
+                                <small th:text="|${c.nombre_paciente} · ${c.estado}|">Paciente · Confirmada</small>
+                                <small th:text="${c.motivo}">Motivo</small>
+                            </li>
+                            <li th:if="${#lists.isEmpty(citasHoy)}" class="adm-hint">Sin citas para hoy.</li>
                         </ul>
                     </div>
 
@@ -68,6 +80,10 @@
                                 <p class="med-dato"><b>Estado</b>
                                     <span class="adm-pill" th:text="${casoActual.estado}"
                                           th:classappend="${casoActual.estado == 'Concluido'} ? 'adm-pill-ok' : (${casoActual.estado == 'Pendiente'} ? 'adm-pill-warn' : '')">En Tratamiento</span>
+                                </p>
+                                <p class="med-dato"><b>Prioridad</b>
+                                    <span class="adm-pill" th:text="${casoActual.prioridad}"
+                                          th:classappend="${casoActual.prioridad == 'Alta'} ? 'adm-pill-bad' : (${casoActual.prioridad == 'Media'} ? 'adm-pill-warn' : 'adm-pill-ok')">Media</span>
                                 </p>
                                 <p class="med-dato"><b>Edad</b>
                                     <span th:text="${casoActual.edad != null} ? |${casoActual.edad} años| : '—'">—</span>

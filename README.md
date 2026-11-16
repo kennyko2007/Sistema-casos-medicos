@@ -51,12 +51,31 @@ y una campanita de notificaciones que avisa al doctor o al paciente cuando llega
 - El aviso «Escribiendo…» se difunde por el WebSocket y se oculta a los 3 segundos.
 - Al recibir un mensaje suena un aviso breve generado con Web Audio (sin archivos de audio).
   Se puede silenciar con el botón «Sonido» de la campanita o de la cabecera del chat.
+- El botón de clip permite adjuntar **PDF, JPG o PNG de hasta 10 MB**. El archivo se guarda en
+  `mensajes_chat.adjunto_datos` (MEDIUMBLOB), no en disco, y por WebSocket solo viaja la
+  ficha del archivo; la descarga pasa por `/chat/adjunto/{id}` con permiso del caso.
+
+### Citas y casos clínicos
+
+- El paciente solicita una cita en `/paciente/citas`: elige doctor, fecha/hora (turnos de
+  15 minutos) y motivo. Solo se aceptan horarios definidos por el administrador y sin cruces
+  con otras citas del doctor o del paciente.
+- El doctor confirma, marca como atendida o cancela en `/medico/citas`.
+- El administrador crea casos clínicos en `/admin/casos` (paciente, doctor, prioridad) y
+  administra los turnos del personal en `/admin/horarios`.
+- El registro de asistencia se puede exportar a CSV (compatible con Excel) desde
+  `/admin/asistencia/registro`.
 
 ### Base de datos
 
 - `migraciones/001_cv_en_base_de_datos.sql`: guarda los CV dentro de MySQL.
 - `migraciones/002_relaciones_e_indices.sql`: agrega claves foráneas, claves únicas e
   índices. Ejecutar una sola vez y comprobar antes que no existan datos huérfanos.
+- `migraciones/003_citas_casos_adjuntos.sql`: crea la tabla `citas`, agrega la prioridad y
+  fecha de cierre a los casos, los adjuntos al chat y sus índices. Es idempotente.
+
+Orden recomendado: **001 → 002 → 003**. Antes de ejecutar 002 haz un respaldo
+(`mysqldump -u USUARIO -p BASE > respaldo.sql`).
 
 ## Variables de entorno
 
@@ -81,6 +100,7 @@ mvn spring-boot:run
 1. Subir este repo a GitHub (el `Dockerfile` está en la raíz).
 2. En Render: **New > Blueprint** (usa `render.yaml`) o **New > Web Service > Docker**.
 3. Cargar `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` en *Environment*.
-4. Ejecutar una sola vez `migraciones/001_cv_en_base_de_datos.sql` en la base MySQL externa.
+4. Ejecutar una sola vez los scripts de `migraciones/` en la base MySQL externa, en orden
+   001 → 002 → 003.
    Los CV (PDF) se guardan dentro de la base de datos, por lo que no hace falta disco persistente
    ni plan de pago. Los CV antiguos hay que volver a subirlos desde Admin > Directorio.

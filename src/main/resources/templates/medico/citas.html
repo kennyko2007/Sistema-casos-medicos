@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: headPanel('Citas')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <div th:replace="~{layout/medico-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Agenda de <em>citas</em></h1>
+                    <p class="adm-sub">Confirma, atiende o cancela las citas que solicitan tus pacientes.</p>
+                </div>
+                <a th:href="@{/medico/atencion}" class="adm-btn adm-btn-ghost adm-btn-sm">← Ir a atención</a>
+            </div>
+
+            <div th:if="${param.actualizado}" class="adm-msg adm-msg-ok">Cita actualizada correctamente.</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <span th:if="${param.error[0] == 'estado'}">Esa cita ya no permite ese cambio de estado.</span>
+                <span th:unless="${param.error[0] == 'estado'}">No se pudo actualizar la cita.</span>
+            </div>
+            <div th:if="${error}" class="adm-msg adm-msg-error" th:text="${error}">Mensaje</div>
+
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha y hora</th>
+                            <th>Paciente</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${citas}">
+                            <td th:text="${c.fecha_texto}">15/11/2026 09:00</td>
+                            <td>
+                                <span th:text="${c.nombre_paciente}">Paciente</span>
+                                <small class="adm-hint" style="display:block">
+                                    <span th:if="${c.edad != null}" th:text="|${c.edad} años|">32 años</span>
+                                    <span th:unless="${c.edad != null}">Edad no registrada</span>
+                                    ·
+                                    <span th:text="${#strings.isEmpty(c.telefono)} ? 'Sin teléfono' : ${c.telefono}">70000000</span>
+                                </small>
+                            </td>
+                            <td th:text="${c.motivo}">Motivo</td>
+                            <td>
+                                <span class="adm-pill" th:text="${c.estado}"
+                                      th:classappend="${c.estado == 'Atendida'} ? 'adm-pill-ok'
+                                          : (${c.estado == 'Cancelada'} ? 'adm-pill-bad' : 'adm-pill-warn')">
+                                    Solicitada
+                                </span>
+                            </td>
+                            <td th:text="${#strings.isEmpty(c.observaciones)} ? '—' : ${c.observaciones}">—</td>
+                            <td>
+                                <form th:if="${c.estado == 'Solicitada' or c.estado == 'Confirmada'}"
+                                      th:action="@{/medico/citas/{id}/estado(id=${c.id})}" method="post"
+                                      class="adm-rowform">
+                                    <input type="text" name="observacion" class="adm-input" maxlength="500"
+                                           placeholder="Nota (opcional)">
+                                    <button th:if="${c.estado == 'Solicitada'}" type="submit" name="estado"
+                                            value="Confirmada" class="adm-btn adm-btn-sm adm-btn-ok">Confirmar</button>
+                                    <button th:if="${c.estado == 'Confirmada'}" type="submit" name="estado"
+                                            value="Atendida" class="adm-btn adm-btn-sm adm-btn-ok">Atendida</button>
+                                    <button type="submit" name="estado" value="Cancelada"
+                                            class="adm-btn adm-btn-sm adm-btn-danger"
+                                            onclick="return confirm('¿Cancelar esta cita?');">Cancelar</button>
+                                </form>
+                                <span th:unless="${c.estado == 'Solicitada' or c.estado == 'Confirmada'}"
+                                      class="adm-hint">—</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(citas)}">
+                            <td colspan="6" class="vacio">No tienes citas registradas.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

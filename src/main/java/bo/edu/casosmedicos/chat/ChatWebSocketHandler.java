@@ -135,6 +135,23 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         avisos.enviarResumen(notificaciones.usuarioContraparte(idCaso, rol));
     }
 
+    /** Lo llama ChatAdjuntosService: por WebSocket solo viaja la ficha, nunca el archivo. */
+    public void difundirAdjunto(Long idCaso, Long id, String rol, String nombre, String tipo, String fecha) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("tipo", "adjunto");
+        payload.put("id", id);
+        payload.put("remitente", rol);
+        payload.put("adjunto", nombre);
+        payload.put("tipoArchivo", tipo);
+        payload.put("fecha", fecha);
+        payload.put("url", "/chat/adjunto/" + id);
+        try {
+            difundir(idCaso, objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            log.warn("No se pudo difundir el adjunto {}", id, e);
+        }
+    }
+
     /** "Escribiendo…" solo se difunde; no se guarda en la base de datos. */
     private void avisarEscribiendo(Long idCaso, String rol) throws JsonProcessingException {
         Map<String, Object> payload = new LinkedHashMap<>();

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: headPanel('Casos clínicos')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <div th:replace="~{layout/admin-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Casos <em>clínicos</em></h1>
+                    <p class="adm-sub">Abre un caso y asígnalo a un doctor. El doctor lo verá en su pantalla de atención.</p>
+                </div>
+                <a th:href="@{/admin/directorio}" class="adm-btn adm-btn-ghost adm-btn-sm">Ver directorio</a>
+            </div>
+
+            <div th:if="${param.exito}" class="adm-msg adm-msg-ok">Caso clínico creado correctamente.</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <span th:if="${param.error[0] == 'datos'}">Revisa el paciente, el doctor y el título del caso.</span>
+                <span th:unless="${param.error[0] == 'datos'}">No se pudo crear el caso. Intenta de nuevo.</span>
+            </div>
+
+            <div class="med-box">
+                <h3>Nuevo <em>caso</em></h3>
+                <form th:action="@{/admin/casos/guardar}" method="post" autocomplete="off">
+                    <div class="adm-grid2">
+                        <div class="adm-field">
+                            <label class="adm-label" for="idPaciente">Paciente</label>
+                            <select id="idPaciente" name="idPaciente" class="adm-input" required>
+                                <option value="">Selecciona un paciente</option>
+                                <option th:each="p : ${pacientes}" th:value="${p.id}" th:text="${p.nombre_completo}">
+                                    Nombre del paciente
+                                </option>
+                            </select>
+                        </div>
+                        <div class="adm-field">
+                            <label class="adm-label" for="idDoctor">Doctor/a responsable</label>
+                            <select id="idDoctor" name="idDoctor" class="adm-input" required>
+                                <option value="">Selecciona un doctor</option>
+                                <option th:each="d : ${doctores}" th:value="${d.id}" th:text="${d.nombre_completo}">
+                                    Nombre del doctor
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="adm-grid2">
+                        <div class="adm-field">
+                            <label class="adm-label" for="titulo">Título del caso</label>
+                            <input id="titulo" type="text" name="titulo" class="adm-input" maxlength="150" required
+                                   placeholder="Ej. Control de dolor torácico">
+                        </div>
+                        <div class="adm-field">
+                            <label class="adm-label" for="prioridad">Prioridad</label>
+                            <select id="prioridad" name="prioridad" class="adm-input">
+                                <option value="Baja">Baja</option>
+                                <option value="Media" selected>Media</option>
+                                <option value="Alta">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="descripcion">Descripción de síntomas</label>
+                        <textarea id="descripcion" name="descripcion" class="adm-input" maxlength="5000"
+                                  placeholder="Motivo de consulta, evolución y datos relevantes"></textarea>
+                    </div>
+                    <button type="submit" class="adm-btn">Crear caso clínico</button>
+                </form>
+            </div>
+
+            <div class="med-box">
+                <h3>Casos <em>registrados</em></h3>
+                <div class="adm-table-wrap">
+                    <table class="adm-table">
+                        <thead>
+                            <tr>
+                                <th>Abierto</th>
+                                <th>Paciente</th>
+                                <th>Doctor/a</th>
+                                <th>Caso</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c : ${casos}">
+                                <td th:text="${c.fecha_texto}">15/11/2026 09:00</td>
+                                <td th:text="${c.nombre_paciente}">Paciente</td>
+                                <td th:text="${c.nombre_doctor}">Doctor</td>
+                                <td th:text="${c.titulo_caso}">Título</td>
+                                <td>
+                                    <span class="adm-pill" th:text="${c.prioridad}"
+                                          th:classappend="${c.prioridad == 'Alta'} ? 'adm-pill-bad'
+                                              : (${c.prioridad == 'Media'} ? 'adm-pill-warn' : 'adm-pill-ok')">
+                                        Media
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="adm-pill" th:text="${c.estado}"
+                                          th:classappend="${c.estado == 'Concluido'} ? 'adm-pill-ok'
+                                              : (${c.estado == 'En Tratamiento'} ? 'adm-pill-warn' : '')">
+                                        Pendiente
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(casos)}">
+                                <td colspan="6" class="vacio">Todavía no hay casos clínicos registrados.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

@@ -32,7 +32,11 @@ public final class HoraBolivia {
     }
 
     public static String diaSemana() {
-        return DIAS[hoy().getDayOfWeek().getValue() - 1];
+        return diaSemana(hoy());
+    }
+
+    public static String diaSemana(LocalDate fecha) {
+        return DIAS[fecha.getDayOfWeek().getValue() - 1];
     }
 
     public static String hoyTexto() {

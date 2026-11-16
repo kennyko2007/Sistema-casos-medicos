@@ -15,7 +15,10 @@
                     <h1 class="adm-title">Asistencia del <em>personal</em></h1>
                     <p class="adm-sub"><span th:text="${hoyTexto}">Domingo 8 de noviembre de 2026</span> · hora de La Paz, Bolivia</p>
                 </div>
-                <a th:href="@{/admin/asistencia/registro}" class="adm-btn adm-btn-ghost adm-btn-sm">Ver registro histórico</a>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <a th:href="@{/admin/horarios}" class="adm-btn adm-btn-ghost adm-btn-sm">Horarios</a>
+                    <a th:href="@{/admin/asistencia/registro}" class="adm-btn adm-btn-ghost adm-btn-sm">Ver registro histórico</a>
+                </div>
             </div>
 
             <div th:if="${param.marcado}" class="adm-msg adm-msg-ok">Asistencia registrada.</div>

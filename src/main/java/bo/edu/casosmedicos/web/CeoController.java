@@ -128,7 +128,7 @@ public class CeoController {
     }
 
     @GetMapping("/pacientes/{id}")
-    public String detallePaciente(@PathVariable("id") Long id, Model model) {
+    public String detallePaciente(@PathVariable Long id, Model model) {
         List<Map<String, Object>> filas = jdbcTemplate.queryForList(
             "SELECT p.id, p.nombre_completo, p.fecha_nacimiento, p.telefono, p.tipo_sangre, u.activo " +
             "FROM pacientes p JOIN usuarios u ON u.id = p.id_usuario WHERE p.id = ?", id);

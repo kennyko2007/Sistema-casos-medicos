@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: headPanel('Mis citas')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <div th:replace="~{layout/paciente-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Mis <em>citas</em></h1>
+                    <p class="adm-sub">Solicita una cita con tu doctor. La cita queda pendiente hasta que el doctor la confirme.</p>
+                </div>
+                <a th:href="@{/paciente/portal}" class="adm-btn adm-btn-ghost adm-btn-sm">← Volver a mi portal</a>
+            </div>
+
+            <div th:if="${param.exito}" class="adm-msg adm-msg-ok">Cita solicitada correctamente.</div>
+            <div th:if="${param.cancelada}" class="adm-msg adm-msg-ok">Cita cancelada.</div>
+            <div th:if="${error}" class="adm-msg adm-msg-error" th:text="${error}">Mensaje</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <th:block th:switch="${param.error[0]}">
+                    <span th:case="'datos'">Completa el doctor, la fecha y el motivo.</span>
+                    <span th:case="'doctor'">El doctor no está disponible.</span>
+                    <span th:case="'fecha'">Elige una fecha futura en intervalos de 15 minutos (máximo 120 días).</span>
+                    <span th:case="'horario'">El doctor no atiende ese día u hora. Revisa su horario.</span>
+                    <span th:case="'ocupado'">Ese horario ya está ocupado. Elige otro.</span>
+                    <span th:case="'estado'">La cita ya no se puede cancelar.</span>
+                    <span th:case="*">No se pudo completar la operación.</span>
+                </th:block>
+            </div>
+
+            <div class="med-box">
+                <h3>Solicitar una <em>cita</em></h3>
+                <form th:action="@{/paciente/citas/solicitar}" method="post" autocomplete="off">
+                    <div class="adm-grid2">
+                        <div class="adm-field">
+                            <label class="adm-label" for="idDoctor">Doctor/a</label>
+                            <select id="idDoctor" name="idDoctor" class="adm-input" required>
+                                <option value="">Selecciona un doctor</option>
+                                <option th:each="d : ${doctores}" th:value="${d.id}"
+                                        th:text="|${d.nombre_completo} · ${d.especialidades != null ? d.especialidades : 'Medicina General'}|">
+                                    Dr. Nombre · Medicina General
+                                </option>
+                            </select>
+                        </div>
+                        <div class="adm-field">
+                            <label class="adm-label" for="fechaHora">Fecha y hora</label>
+                            <input id="fechaHora" type="datetime-local" name="fechaHora" class="adm-input"
+                                   required step="900" th:min="${minFechaHora}">
+                            <p class="adm-hint">Horarios en intervalos de 15 minutos, hora de La Paz.</p>
+                        </div>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label" for="motivo">Motivo de la consulta</label>
+                        <textarea id="motivo" name="motivo" class="adm-input" maxlength="500" required
+                                  placeholder="Describe brevemente por qué necesitas la cita"></textarea>
+                    </div>
+                    <button type="submit" class="adm-btn">Solicitar cita</button>
+                </form>
+            </div>
+
+            <div class="med-box">
+                <h3>Mis citas <em>registradas</em></h3>
+                <div class="adm-table-wrap">
+                    <table class="adm-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha y hora</th>
+                                <th>Doctor/a</th>
+                                <th>Motivo</th>
+                                <th>Estado</th>
+                                <th>Observaciones</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c : ${citas}">
+                                <td th:text="${c.fecha_texto}">15/11/2026 09:00</td>
+                                <td th:text="${c.nombre_doctor}">Dr. Nombre</td>
+                                <td th:text="${c.motivo}">Motivo</td>
+                                <td>
+                                    <span class="adm-pill" th:text="${c.estado}"
+                                          th:classappend="${c.estado == 'Atendida'} ? 'adm-pill-ok'
+                                              : (${c.estado == 'Cancelada'} ? 'adm-pill-bad' : 'adm-pill-warn')">
+                                        Solicitada
+                                    </span>
+                                </td>
+                                <td th:text="${#strings.isEmpty(c.observaciones)} ? '—' : ${c.observaciones}">—</td>
+                                <td>
+                                    <form th:if="${c.estado == 'Solicitada' or c.estado == 'Confirmada'}"
+                                          th:action="@{/paciente/citas/{id}/cancelar(id=${c.id})}" method="post"
+                                          onsubmit="return confirm('¿Seguro que deseas cancelar esta cita?');">
+                                        <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger">Cancelar</button>
+                                    </form>
+                                    <span th:unless="${c.estado == 'Solicitada' or c.estado == 'Confirmada'}"
+                                          class="adm-hint">—</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(citas)}">
+                                <td colspan="6" class="vacio">Todavía no tienes citas registradas.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

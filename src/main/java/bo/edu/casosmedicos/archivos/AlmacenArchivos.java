@@ -63,7 +63,7 @@ public class AlmacenArchivos {
         return contenido;
     }
 
-        /** Guarda el PDF generado de una atención. Devuelve la ruta relativa "atenciones/....pdf". */
+    /** Guarda el PDF generado de una atención. Devuelve la ruta relativa "atenciones/....pdf". */
     public String guardarAtencionPdf(long idAtencion, byte[] contenido) throws IOException {
         String relativa = "atenciones/atencion-" + idAtencion + "-" + UUID.randomUUID() + ".pdf";
         Files.write(base.resolve(relativa), contenido);

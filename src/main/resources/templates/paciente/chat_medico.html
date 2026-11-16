@@ -16,6 +16,11 @@
                 <a th:href="@{/paciente/portal}" class="adm-btn adm-btn-ghost adm-btn-sm">← Volver a mi portal</a>
             </div>
 
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                No se pudo enviar el adjunto. Usa un PDF, JPG o PNG de máximo 10 MB.
+            </div>
+            <div th:if="${param.adjuntado}" class="adm-msg adm-msg-ok">Adjunto enviado.</div>
+
             <div class="med-chat">
                 <div class="med-chat-head">
                     <div class="med-chat-quien">
@@ -33,17 +38,34 @@
                 <div class="med-chat-msgs" id="mensajes" th:attr="data-caso=${caso.id},data-yo='paciente'">
                     <div th:each="m : ${mensajes}" class="burbuja"
                          th:classappend="${m.remitente == 'paciente'} ? 'burbuja-mia' : 'burbuja-otro'">
-                        <span th:text="${m.mensaje}">Mensaje</span>
+                        <a th:if="${m.adjunto_nombre != null}"
+                           th:href="@{/chat/adjunto/{id}(id=${m.id})}" target="_blank" rel="noopener"
+                           class="burbuja-archivo"
+                           th:classappend="${#strings.startsWith(m.adjunto_tipo, 'image/')} ? 'es-imagen'"
+                           th:text="${m.adjunto_nombre}">archivo.pdf</a>
+                        <span th:if="${m.adjunto_nombre == null}" th:text="${m.mensaje}">Mensaje</span>
                         <time th:text="${m.fecha_envio}">2026-11-08 08:10</time>
                     </div>
                     <p th:if="${#lists.isEmpty(mensajes)}" class="adm-hint" style="text-align:center">Aún no hay mensajes. Escribe el primero.</p>
                 </div>
 
-                <form th:action="@{/paciente/chat/enviar}" method="post" class="med-chat-form" autocomplete="off">
-                    <input type="hidden" name="idCaso" th:value="${caso.id}">
-                    <input type="text" name="mensaje" class="adm-input" required maxlength="1000" placeholder="Escribe un mensaje…">
-                    <button type="submit" class="adm-btn">Enviar</button>
-                </form>
+                <div class="med-chat-bar">
+                    <form id="chat-adjunto-form" th:action="@{/chat/adjunto/{id}(id=${caso.id})}" method="post"
+                          enctype="multipart/form-data" class="chat-adj-form">
+                        <label class="chat-file" title="Adjuntar PDF, JPG o PNG (máx. 10 MB)">
+                            <input type="file" name="archivo" id="chat-archivo" hidden
+                                   accept="application/pdf,image/jpeg,image/png">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M21.4 11.1 12.3 20.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.3-8.3"/>
+                            </svg>
+                        </label>
+                    </form>
+                    <form th:action="@{/paciente/chat/enviar}" method="post" class="med-chat-form" autocomplete="off">
+                        <input type="hidden" name="idCaso" th:value="${caso.id}">
+                        <input type="text" name="mensaje" class="adm-input" required maxlength="1000" placeholder="Escribe un mensaje…">
+                        <button type="submit" class="adm-btn">Enviar</button>
+                    </form>
+                </div>
                 <small id="chat-estado" class="adm-hint"></small>
             </div>
         </section>
@@ -51,6 +73,6 @@
 
     <footer th:replace="~{layout/base :: footer}"></footer>
 
-    <script th:src="@{/js/chat-vivo.js(v='20261115c')}"></script>
+    <script th:src="@{/js/chat-vivo.js(v='20261115d')}"></script>
 </body>
 </html>

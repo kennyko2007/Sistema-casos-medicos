@@ -1,5 +1,6 @@
 package bo.edu.casosmedicos.web;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -11,9 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import bo.edu.casosmedicos.chat.AvisosWebSocketHandler;
 import bo.edu.casosmedicos.chat.NotificacionesService;
+import bo.edu.casosmedicos.citas.CitasService;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,12 +31,14 @@ public class PacienteController {
     private final JdbcTemplate jdbcTemplate;
     private final NotificacionesService notificaciones;
     private final AvisosWebSocketHandler avisos;
+    private final CitasService citas;
 
     public PacienteController(JdbcTemplate jdbcTemplate, NotificacionesService notificaciones,
-                              AvisosWebSocketHandler avisos) {
+                              AvisosWebSocketHandler avisos, CitasService citas) {
         this.jdbcTemplate = jdbcTemplate;
         this.notificaciones = notificaciones;
         this.avisos = avisos;
+        this.citas = citas;
     }
 
     /** Perfil del paciente a partir del username con el que inició sesión. */
@@ -120,8 +127,53 @@ public class PacienteController {
         return "paciente/casos_clinicos";
     }
 
+    // ------------------------------------------------------------------ CITAS
+
+    @GetMapping("/citas")
+    public String citas(Authentication authentication, Model model) {
+        Map<String, Object> paciente = buscarPaciente(authentication.getName());
+        if (paciente == null) {
+            model.addAttribute("error", "No se encontró información del paciente.");
+            return "paciente/citas";
+        }
+        model.addAttribute("paciente", paciente);
+        model.addAttribute("doctores", citas.doctores());
+        model.addAttribute("citas", citas.citasPaciente(paciente.get("id")));
+        model.addAttribute("minFechaHora",
+            LocalDateTime.now(HoraBolivia.ZONA).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+        return "paciente/citas";
+    }
+
+    @PostMapping("/citas/solicitar")
+    public String solicitarCita(@RequestParam("idDoctor") Long idDoctor,
+                                @RequestParam("fechaHora")
+                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaHora,
+                                @RequestParam("motivo") String motivo,
+                                Authentication authentication) {
+        Map<String, Object> paciente = buscarPaciente(authentication.getName());
+        if (paciente == null) {
+            return "redirect:/paciente/portal";
+        }
+        CitasService.Solicitud resultado = citas.solicitar(paciente.get("id"), idDoctor, fechaHora, motivo);
+        if (resultado.resultado() == CitasService.Resultado.OK) {
+            return "redirect:/paciente/citas?exito";
+        }
+        return "redirect:/paciente/citas?error="
+            + resultado.resultado().name().toLowerCase(Locale.ROOT);
+    }
+
+    @PostMapping("/citas/{id}/cancelar")
+    public String cancelarCita(@PathVariable Long id, Authentication authentication) {
+        Map<String, Object> paciente = buscarPaciente(authentication.getName());
+        if (paciente == null) {
+            return "redirect:/paciente/portal";
+        }
+        boolean cancelada = citas.cancelarPaciente(id, paciente.get("id"));
+        return "redirect:/paciente/citas?" + (cancelada ? "cancelada" : "error=estado");
+    }
+
     @GetMapping("/chat/{idCaso}")
-    public String verChatCaso(@PathVariable("idCaso") Long idCaso,
+    public String verChatCaso(@PathVariable Long idCaso,
                               Authentication authentication, Model model) {
         Map<String, Object> paciente = buscarPaciente(authentication.getName());
         if (paciente == null) {
@@ -138,7 +190,7 @@ public class PacienteController {
             idCaso);
 
         List<Map<String, Object>> mensajes = jdbcTemplate.queryForList(
-            "SELECT remitente, mensaje, fecha_envio FROM mensajes_chat " +
+            "SELECT id, remitente, mensaje, fecha_envio, adjunto_nombre, adjunto_tipo FROM mensajes_chat " +
             "WHERE id_caso = ? ORDER BY fecha_envio ASC, id ASC", idCaso);
 
         model.addAttribute("paciente", paciente);
@@ -146,7 +198,7 @@ public class PacienteController {
         model.addAttribute("mensajes", mensajes);
         return "paciente/chat_medico";
     }
-        /** Enlace del navbar: abre el chat del caso con actividad más reciente. */
+    /** Enlace del navbar: abre el chat del caso con actividad más reciente. */
     @GetMapping("/chat")
     public String chatReciente(Authentication authentication) {
         Map<String, Object> paciente = buscarPaciente(authentication.getName());

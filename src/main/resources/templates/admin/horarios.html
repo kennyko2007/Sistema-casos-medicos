@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: headPanel('Horarios del personal')}"></head>
+<body>
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <div th:replace="~{layout/admin-ui :: fondo}"></div>
+
+    <main class="adm-wrap">
+        <section class="adm-card">
+            <div class="adm-top">
+                <div>
+                    <h1 class="adm-title">Horarios del <em>personal</em></h1>
+                    <p class="adm-sub">Define los días y turnos de doctores y enfermeros. Las citas solo se aceptan dentro de estos horarios.</p>
+                </div>
+                <a th:href="@{/admin/asistencia}" class="adm-btn adm-btn-ghost adm-btn-sm">Ver asistencia</a>
+            </div>
+
+            <div th:if="${param.exito}" class="adm-msg adm-msg-ok">Horario agregado correctamente.</div>
+            <div th:if="${param.eliminado}" class="adm-msg adm-msg-ok">Horario eliminado.</div>
+            <div th:if="${param.error}" class="adm-msg adm-msg-error">
+                <th:block th:switch="${param.error[0]}">
+                    <span th:case="'datos'">Revisa la persona, el día y que la hora de inicio sea menor a la de fin.</span>
+                    <span th:case="'choque'">Ese turno se cruza con otro horario de la misma persona.</span>
+                    <span th:case="*">No se pudo guardar el horario.</span>
+                </th:block>
+            </div>
+
+            <div class="med-box">
+                <h3>Agregar <em>turno</em></h3>
+                <form th:action="@{/admin/horarios/guardar}" method="post" autocomplete="off">
+                    <div class="adm-grid2">
+                        <div class="adm-field">
+                            <label class="adm-label" for="idUsuario">Persona</label>
+                            <select id="idUsuario" name="idUsuario" class="adm-input" required>
+                                <option value="">Selecciona doctor o enfermero/a</option>
+                                <option th:each="p : ${personal}" th:value="${p.id}"
+                                        th:text="|${p.nombre} (${p.rol})|">Nombre (doctor)</option>
+                            </select>
+                        </div>
+                        <div class="adm-field">
+                            <label class="adm-label" for="dia">Día</label>
+                            <select id="dia" name="dia" class="adm-input" required>
+                                <option th:each="d : ${dias}" th:value="${d}" th:text="${d}">Lunes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="adm-grid2">
+                        <div class="adm-field">
+                            <label class="adm-label" for="horaInicio">Hora de inicio</label>
+                            <input id="horaInicio" type="time" name="horaInicio" class="adm-input" required>
+                        </div>
+                        <div class="adm-field">
+                            <label class="adm-label" for="horaFin">Hora de fin</label>
+                            <input id="horaFin" type="time" name="horaFin" class="adm-input" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="adm-btn">Agregar horario</button>
+                </form>
+            </div>
+
+            <div class="med-box">
+                <h3>Horarios <em>registrados</em></h3>
+                <div class="adm-table-wrap">
+                    <table class="adm-table">
+                        <thead>
+                            <tr>
+                                <th>Persona</th>
+                                <th>Cargo</th>
+                                <th>Día</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="h : ${horarios}">
+                                <td th:text="${h.nombre}">Nombre</td>
+                                <td><span class="adm-cap" th:text="${h.rol}">doctor</span></td>
+                                <td th:text="${h.dia_semana}">Lunes</td>
+                                <td th:text="${h.hora_inicio}">08:00</td>
+                                <td th:text="${h.hora_fin}">14:00</td>
+                                <td>
+                                    <form th:action="@{/admin/horarios/eliminar}" method="post"
+                                          onsubmit="return confirm('¿Eliminar este horario?');">
+                                        <input type="hidden" name="idUsuario" th:value="${h.id_usuario}">
+                                        <input type="hidden" name="dia" th:value="${h.dia_semana}">
+                                        <input type="hidden" name="horaInicio" th:value="${h.hora_inicio}">
+                                        <input type="hidden" name="horaFin" th:value="${h.hora_fin}">
+                                        <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger">Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(horarios)}">
+                                <td colspan="6" class="vacio">No hay horarios registrados.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/base :: footer}"></footer>
+</body>
+</html>

@@ -187,6 +187,16 @@ textarea.adm-input { min-height: 96px; resize: vertical; }
 .burbuja-otro { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; }
 .med-chat-form { display: flex; gap: .5rem; padding: .7rem; background: #fff; border-top: 1px solid #e3e9f1; }
 .med-chat-form .adm-input { flex: 1; }
+.med-chat-bar { display: flex; align-items: center; gap: .45rem; padding: .7rem; background: #fff; border-top: 1px solid #e3e9f1; }
+.med-chat-bar .med-chat-form { flex: 1; padding: 0; border-top: 0; background: none; }
+.chat-adj-form { display: flex; }
+.chat-file { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid #d7e0ec; border-radius: 10px; background: #f7fafd; color: #365273; cursor: pointer; }
+.chat-file:hover { background: #eaf2fb; }
+.chat-file svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chat-file.enviando { opacity: .45; pointer-events: none; }
+.burbuja-archivo { display: inline-flex; align-items: center; gap: .45rem; color: inherit; font-weight: 600; text-decoration: underline; word-break: break-all; }
+.burbuja-archivo::before { content: "PDF"; flex: none; font-size: .6rem; font-weight: 700; letter-spacing: .04em; color: #fff; background: #d92d4b; border-radius: 5px; padding: .1rem .3rem; }
+.burbuja-archivo.es-imagen::before { content: "IMG"; background: #2563b8; }
 
 /* ---------- Paciente ---------- */
 .pac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }

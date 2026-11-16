@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import bo.edu.casosmedicos.pdf.AtencionPdfService;
 import bo.edu.casosmedicos.chat.AvisosWebSocketHandler;
 import bo.edu.casosmedicos.chat.NotificacionesService;
+import bo.edu.casosmedicos.citas.CitasService;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -52,16 +53,19 @@ public class MedicoController {
     private final AtencionPdfService pdfService;
     private final NotificacionesService notificaciones;
     private final AvisosWebSocketHandler avisos;
+    private final CitasService citas;
 
     public MedicoController(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper,
                             PlatformTransactionManager txManager, AtencionPdfService pdfService,
-                            NotificacionesService notificaciones, AvisosWebSocketHandler avisos) {
+                            NotificacionesService notificaciones, AvisosWebSocketHandler avisos,
+                            CitasService citas) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
         this.tx = new TransactionTemplate(txManager);
         this.pdfService = pdfService;
         this.notificaciones = notificaciones;
         this.avisos = avisos;
+        this.citas = citas;
     }
 
     // ------------------------------------------------------------------ utilidades
@@ -102,7 +106,8 @@ public class MedicoController {
     private List<Map<String, Object>> conversaciones(Object idDoctor) {
         return jdbcTemplate.queryForList(
             "SELECT cm.id AS id_caso, cm.titulo_caso, p.nombre_completo AS nombre_paciente, " +
-            "(SELECT m.mensaje FROM mensajes_chat m WHERE m.id_caso = cm.id " +
+            "(SELECT CASE WHEN m.adjunto_nombre IS NOT NULL THEN CONCAT('Adjunto: ', m.adjunto_nombre) " +
+            "   ELSE m.mensaje END FROM mensajes_chat m WHERE m.id_caso = cm.id " +
             "   ORDER BY m.fecha_envio DESC, m.id DESC LIMIT 1) AS ultimo_mensaje, " +
             "(SELECT MAX(m.fecha_envio) FROM mensajes_chat m WHERE m.id_caso = cm.id) AS ultima_fecha, " +
             "(SELECT COUNT(*) FROM mensajes_chat m WHERE m.id_caso = cm.id " +
@@ -134,7 +139,7 @@ public class MedicoController {
         // Casos activos del doctor
         List<Map<String, Object>> casos = jdbcTemplate.queryForList(
             "SELECT cm.id, cm.titulo_caso, cm.descripcion_sintomas, cm.diagnostico, cm.estado, " +
-            "cm.fecha_creacion, p.id AS id_paciente, p.nombre_completo AS nombre_paciente, " +
+            "cm.prioridad, cm.fecha_creacion, p.id AS id_paciente, p.nombre_completo AS nombre_paciente, " +
             "p.telefono, p.tipo_sangre, TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad " +
             "FROM casos_medicos cm JOIN pacientes p ON p.id = cm.id_paciente " +
             "WHERE cm.id_doctor = ? AND cm.estado <> 'Concluido' ORDER BY cm.fecha_creacion", idDoctor);
@@ -174,6 +179,7 @@ public class MedicoController {
         model.addAttribute("especialidadActual", especialidadActual);
         model.addAttribute("casos", casos);
         model.addAttribute("casoActual", casoActual);
+        model.addAttribute("citasHoy", citas.citasDeHoy(idDoctor));
 
         if (casoActual != null) {
             model.addAttribute("atencionesPrevias", jdbcTemplate.queryForList(
@@ -309,6 +315,33 @@ public class MedicoController {
         }
     }
 
+    // ------------------------------------------------------------------ CITAS
+
+    @GetMapping("/citas")
+    public String citas(Authentication authentication, Model model) {
+        Map<String, Object> doctor = buscarDoctor(authentication.getName());
+        if (doctor == null) {
+            model.addAttribute("error", "No se encontró información del médico.");
+            return "medico/citas";
+        }
+        model.addAttribute("doctor", doctor);
+        model.addAttribute("citas", citas.citasDoctor(doctor.get("id")));
+        return "medico/citas";
+    }
+
+    @PostMapping("/citas/{id}/estado")
+    public String cambiarEstadoCita(@PathVariable Long id,
+                                    @RequestParam("estado") String estado,
+                                    @RequestParam(value = "observacion", required = false) String observacion,
+                                    Authentication authentication) {
+        Map<String, Object> doctor = buscarDoctor(authentication.getName());
+        if (doctor == null) {
+            return "redirect:/medico/atencion";
+        }
+        boolean actualizada = citas.cambiarEstado(id, doctor.get("id"), estado, observacion);
+        return "redirect:/medico/citas?" + (actualizada ? "actualizado" : "error=estado");
+    }
+
     // ------------------------------------------------------------------ HISTÓRICO
 
     @GetMapping("/historico_pacientes")
@@ -347,7 +380,7 @@ public class MedicoController {
     }
 
     @GetMapping("/chat/{idCaso}")
-    public String chatCaso(@PathVariable("idCaso") Long idCaso,
+    public String chatCaso(@PathVariable Long idCaso,
                            Authentication authentication, Model model) {
         Map<String, Object> doctor = buscarDoctor(authentication.getName());
         if (doctor == null) {
@@ -368,7 +401,7 @@ public class MedicoController {
         model.addAttribute("doctor", doctor);
         model.addAttribute("caso", filas.get(0));
         model.addAttribute("mensajes", jdbcTemplate.queryForList(
-            "SELECT remitente, mensaje, fecha_envio FROM mensajes_chat " +
+            "SELECT id, remitente, mensaje, fecha_envio, adjunto_nombre, adjunto_tipo FROM mensajes_chat " +
             "WHERE id_caso = ? ORDER BY fecha_envio ASC, id ASC", idCaso));
         model.addAttribute("conversaciones", conversaciones(doctor.get("id")));
         return "medico/chat";

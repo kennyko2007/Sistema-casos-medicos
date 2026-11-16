@@ -5,6 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -22,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +54,9 @@ public class AdminController {
     private static final Pattern USERNAME = Pattern.compile("^[A-Za-z0-9._-]{3,50}$");
     private static final Pattern TIPO_SANGRE = Pattern.compile("^(A|B|AB|O)[+-]$");
     private static final Set<String> ESTADOS_ASISTENCIA = Set.of("Presente", "Tarde", "Ausente", "Permiso");
+    private static final Set<String> PRIORIDADES = Set.of("Baja", "Media", "Alta");
+    private static final List<String> DIAS = List.of(
+        "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo");
     private static final int PASSWORD_MIN = 6;
 
     private static final String SQL_ASISTENCIA_HOY =
@@ -72,7 +81,7 @@ public class AdminController {
         return jdbcTemplate.queryForList(SQL_ASISTENCIA_HOY, dia, dia, java.sql.Date.valueOf(HoraBolivia.hoy()));
     }
 
-        private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoder passwordEncoder;
     private final TransactionTemplate tx;
     private final AlmacenArchivos almacenArchivos;
@@ -213,7 +222,7 @@ public class AdminController {
         return "admin/registro_personal";
     }
 
-        @PostMapping("/personal/guardar")
+    @PostMapping("/personal/guardar")
     public String guardarPersonal(@RequestParam("rol") String rol,
                                   @RequestParam("username") String username,
                                   @RequestParam("password") String password,
@@ -326,7 +335,7 @@ public class AdminController {
 
     /** Deshabilitar o habilitar. Nunca se borra. Al habilitar se reinician los intentos fallidos. */
     @PostMapping("/usuarios/{id}/estado")
-    public String cambiarEstado(@PathVariable("id") Long id,
+    public String cambiarEstado(@PathVariable Long id,
                                 @RequestParam("activo") boolean activo,
                                 Authentication authentication, HttpServletRequest request) {
         int n;
@@ -345,7 +354,7 @@ public class AdminController {
     }
 
     @GetMapping("/usuarios/{id}/editar")
-    public String editar(@PathVariable("id") Long id, Model model) {
+    public String editar(@PathVariable Long id, Model model) {
         List<Map<String, Object>> u = jdbcTemplate.queryForList(
             "SELECT id, username, correo, rol, activo FROM usuarios " +
             "WHERE id = ? AND rol IN ('doctor','enfermero','paciente')", id);
@@ -361,7 +370,7 @@ public class AdminController {
     }
 
     @PostMapping("/usuarios/{id}/actualizar")
-    public String actualizar(@PathVariable("id") Long id,
+    public String actualizar(@PathVariable Long id,
                              @RequestParam("nombreCompleto") String nombreCompleto,
                              @RequestParam(value = "telefono", required = false) String telefono,
                              @RequestParam(value = "correo", required = false) String correo,
@@ -428,7 +437,7 @@ public class AdminController {
     }
     /** Sube o reemplaza el CV en PDF de un doctor o enfermero existente. {id} es usuarios.id. */
     @PostMapping("/usuarios/{id}/cv")
-    public String subirCv(@PathVariable("id") Long id,
+    public String subirCv(@PathVariable Long id,
                           @RequestParam("cvPdf") MultipartFile cvPdf,
                           Authentication authentication, HttpServletRequest request) {
         if (contar("SELECT COUNT(*) FROM doctores WHERE id_usuario = ?", id)
@@ -458,6 +467,131 @@ public class AdminController {
             return "redirect:/admin/directorio?error";
         }
     }
+    // ------------------------------------------------------------------ CASOS CLÍNICOS
+
+    @GetMapping("/casos")
+    public String casos(Model model) {
+        model.addAttribute("pacientes", jdbcTemplate.queryForList(
+            "SELECT p.id, p.nombre_completo FROM pacientes p JOIN usuarios u ON u.id = p.id_usuario " +
+            "WHERE u.activo = 1 ORDER BY p.nombre_completo"));
+        model.addAttribute("doctores", jdbcTemplate.queryForList(
+            "SELECT d.id, d.nombre_completo FROM doctores d JOIN usuarios u ON u.id = d.id_usuario " +
+            "WHERE u.activo = 1 ORDER BY d.nombre_completo"));
+        model.addAttribute("casos", jdbcTemplate.queryForList(
+            "SELECT cm.id, cm.titulo_caso, cm.estado, cm.prioridad, " +
+            "DATE_FORMAT(cm.fecha_creacion, '%d/%m/%Y %H:%i') AS fecha_texto, " +
+            "p.nombre_completo AS nombre_paciente, d.nombre_completo AS nombre_doctor " +
+            "FROM casos_medicos cm " +
+            "JOIN pacientes p ON p.id = cm.id_paciente " +
+            "JOIN doctores d ON d.id = cm.id_doctor " +
+            "ORDER BY cm.fecha_creacion DESC LIMIT 500"));
+        return "admin/casos";
+    }
+
+    @PostMapping("/casos/guardar")
+    public String guardarCaso(@RequestParam("idPaciente") Long idPaciente,
+                              @RequestParam("idDoctor") Long idDoctor,
+                              @RequestParam("titulo") String titulo,
+                              @RequestParam(value = "descripcion", required = false) String descripcion,
+                              @RequestParam(value = "prioridad", defaultValue = "Media") String prioridad,
+                              Authentication authentication, HttpServletRequest request) {
+        final String tituloFinal = limpiar(titulo, 150);
+        if (tituloFinal == null || !PRIORIDADES.contains(prioridad)
+                || contar("SELECT COUNT(*) FROM pacientes p JOIN usuarios u ON u.id = p.id_usuario " +
+                          "WHERE p.id = ? AND u.activo = 1", idPaciente) == 0
+                || contar("SELECT COUNT(*) FROM doctores d JOIN usuarios u ON u.id = d.id_usuario " +
+                          "WHERE d.id = ? AND u.activo = 1", idDoctor) == 0) {
+            return "redirect:/admin/casos?error=datos";
+        }
+        try {
+            Long idCaso = insertarConId(
+                "INSERT INTO casos_medicos (id_paciente, id_doctor, titulo_caso, descripcion_sintomas, " +
+                "estado, prioridad, fecha_creacion) VALUES (?, ?, ?, ?, 'Pendiente', ?, NOW())",
+                idPaciente, idDoctor, tituloFinal, limpiar(descripcion, 5000), prioridad);
+            auditar(authentication.getName(), "CREAR_CASO", "casos_medicos", idCaso, request);
+            return "redirect:/admin/casos?exito";
+        } catch (Exception e) {
+            log.error("Error al crear el caso clínico", e);
+            return "redirect:/admin/casos?error=db";
+        }
+    }
+
+    // ------------------------------------------------------------------ HORARIOS
+
+    @GetMapping("/horarios")
+    public String horarios(Model model) {
+        model.addAttribute("dias", DIAS);
+        model.addAttribute("personal", jdbcTemplate.queryForList(
+            "SELECT u.id, u.rol, COALESCE(d.nombre_completo, e.nombre_completo) AS nombre " +
+            "FROM usuarios u " +
+            "LEFT JOIN doctores d ON d.id_usuario = u.id " +
+            "LEFT JOIN enfermeros e ON e.id_usuario = u.id " +
+            "WHERE u.rol IN ('doctor','enfermero') AND u.activo = 1 ORDER BY u.rol, nombre"));
+        model.addAttribute("horarios", jdbcTemplate.queryForList(
+            "SELECT h.id_usuario, h.dia_semana, " +
+            "TIME_FORMAT(h.hora_inicio, '%H:%i') AS hora_inicio, " +
+            "TIME_FORMAT(h.hora_fin, '%H:%i') AS hora_fin, u.rol, " +
+            "COALESCE(d.nombre_completo, e.nombre_completo) AS nombre " +
+            "FROM horarios h JOIN usuarios u ON u.id = h.id_usuario " +
+            "LEFT JOIN doctores d ON d.id_usuario = u.id " +
+            "LEFT JOIN enfermeros e ON e.id_usuario = u.id " +
+            "WHERE u.rol IN ('doctor','enfermero') AND u.activo = 1 " +
+            "ORDER BY FIELD(h.dia_semana,'Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'), " +
+            "h.hora_inicio, nombre"));
+        return "admin/horarios";
+    }
+
+    @PostMapping("/horarios/guardar")
+    public String guardarHorario(@RequestParam("idUsuario") Long idUsuario,
+                                 @RequestParam("dia") String dia,
+                                 @RequestParam("horaInicio")
+                                     @DateTimeFormat(pattern = "HH:mm") LocalTime horaInicio,
+                                 @RequestParam("horaFin")
+                                     @DateTimeFormat(pattern = "HH:mm") LocalTime horaFin,
+                                 Authentication authentication, HttpServletRequest request) {
+        if (!DIAS.contains(dia) || !horaInicio.isBefore(horaFin) || contar(
+                "SELECT COUNT(*) FROM usuarios WHERE id = ? AND rol IN ('doctor','enfermero') " +
+                "AND activo = 1", idUsuario) == 0) {
+            return "redirect:/admin/horarios?error=datos";
+        }
+        java.sql.Time inicio = java.sql.Time.valueOf(horaInicio);
+        java.sql.Time fin = java.sql.Time.valueOf(horaFin);
+        int choque = contar(
+            "SELECT COUNT(*) FROM horarios WHERE id_usuario = ? AND dia_semana = ? " +
+            "AND ? < hora_fin AND ? > hora_inicio", idUsuario, dia, inicio, fin);
+        if (choque > 0) {
+            return "redirect:/admin/horarios?error=choque";
+        }
+        try {
+            jdbcTemplate.update(
+                "INSERT INTO horarios (id_usuario, dia_semana, hora_inicio, hora_fin) VALUES (?, ?, ?, ?)",
+                idUsuario, dia, inicio, fin);
+            auditar(authentication.getName(), "CREAR_HORARIO", "usuarios", idUsuario, request);
+            return "redirect:/admin/horarios?exito";
+        } catch (Exception e) {
+            log.error("Error al guardar el horario del usuario {}", idUsuario, e);
+            return "redirect:/admin/horarios?error=db";
+        }
+    }
+
+    @PostMapping("/horarios/eliminar")
+    public String eliminarHorario(@RequestParam("idUsuario") Long idUsuario,
+                                  @RequestParam("dia") String dia,
+                                  @RequestParam("horaInicio")
+                                      @DateTimeFormat(pattern = "HH:mm") LocalTime horaInicio,
+                                  @RequestParam("horaFin")
+                                      @DateTimeFormat(pattern = "HH:mm") LocalTime horaFin,
+                                  Authentication authentication, HttpServletRequest request) {
+        int n = jdbcTemplate.update(
+            "DELETE FROM horarios WHERE id_usuario = ? AND dia_semana = ? " +
+            "AND hora_inicio = ? AND hora_fin = ?",
+            idUsuario, dia, java.sql.Time.valueOf(horaInicio), java.sql.Time.valueOf(horaFin));
+        if (n > 0) {
+            auditar(authentication.getName(), "ELIMINAR_HORARIO", "usuarios", idUsuario, request);
+        }
+        return "redirect:/admin/horarios?" + (n > 0 ? "eliminado" : "error");
+    }
+
     // ------------------------------------------------------------------ ASISTENCIA
 
     @GetMapping("/asistencia")
@@ -501,6 +635,22 @@ public class AdminController {
         }
     }
 
+    private List<Map<String, Object>> registrosAsistencia(LocalDate ini, LocalDate fin) {
+        return jdbcTemplate.queryForList(
+            "SELECT DATE_FORMAT(a.fecha, '%d/%m/%Y') AS fecha, TIME_FORMAT(a.hora_registro, '%H:%i') AS hora, " +
+            "a.estado, a.observacion, u.rol, " +
+            "COALESCE(d.nombre_completo, e.nombre_completo) AS nombre, " +
+            "COALESCE(pa.nombre_completo, ua.username) AS registrado_por " +
+            "FROM asistencia a " +
+            "JOIN usuarios u ON u.id = a.id_usuario " +
+            "LEFT JOIN doctores d ON d.id_usuario = u.id " +
+            "LEFT JOIN enfermeros e ON e.id_usuario = u.id " +
+            "LEFT JOIN usuarios ua ON ua.id = a.id_admin_registro " +
+            "LEFT JOIN personal_administrativo pa ON pa.id_usuario = ua.id " +
+            "WHERE a.fecha BETWEEN ? AND ? ORDER BY a.fecha DESC, nombre",
+            java.sql.Date.valueOf(ini), java.sql.Date.valueOf(fin));
+    }
+
     @GetMapping("/asistencia/registro")
     public String registroAsistencia(
             @RequestParam(value = "desde", required = false)
@@ -513,19 +663,44 @@ public class AdminController {
 
         model.addAttribute("desde", ini);
         model.addAttribute("hasta", fin);
-        model.addAttribute("registros", jdbcTemplate.queryForList(
-            "SELECT DATE_FORMAT(a.fecha, '%d/%m/%Y') AS fecha, TIME_FORMAT(a.hora_registro, '%H:%i') AS hora, " +
-            "a.estado, a.observacion, u.rol, " +
-            "COALESCE(d.nombre_completo, e.nombre_completo) AS nombre, " +
-            "COALESCE(pa.nombre_completo, ua.username) AS registrado_por " +
-            "FROM asistencia a " +
-            "JOIN usuarios u ON u.id = a.id_usuario " +
-            "LEFT JOIN doctores d ON d.id_usuario = u.id " +
-            "LEFT JOIN enfermeros e ON e.id_usuario = u.id " +
-            "LEFT JOIN usuarios ua ON ua.id = a.id_admin_registro " +
-            "LEFT JOIN personal_administrativo pa ON pa.id_usuario = ua.id " +
-            "WHERE a.fecha BETWEEN ? AND ? ORDER BY a.fecha DESC, nombre",
-            java.sql.Date.valueOf(ini), java.sql.Date.valueOf(fin)));
+        model.addAttribute("registros", registrosAsistencia(ini, fin));
         return "admin/asistencia_registro";
+    }
+
+    @GetMapping("/asistencia/registro.csv")
+    public ResponseEntity<byte[]> exportarAsistencia(
+            @RequestParam(value = "desde", required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(value = "hasta", required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        LocalDate fin = hasta != null ? hasta : HoraBolivia.hoy();
+        LocalDate ini = desde != null ? desde : fin.minusDays(30);
+
+        StringBuilder csv = new StringBuilder("\uFEFF");
+        csv.append("Fecha;Hora;Nombre;Cargo;Estado;Observacion;Registrado por\r\n");
+        for (Map<String, Object> r : registrosAsistencia(ini, fin)) {
+            csv.append(celdaCsv(r.get("fecha"))).append(';')
+               .append(celdaCsv(r.get("hora"))).append(';')
+               .append(celdaCsv(r.get("nombre"))).append(';')
+               .append(celdaCsv(r.get("rol"))).append(';')
+               .append(celdaCsv(r.get("estado"))).append(';')
+               .append(celdaCsv(r.get("observacion"))).append(';')
+               .append(celdaCsv(r.get("registrado_por"))).append("\r\n");
+        }
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                .filename("asistencia-" + ini + "-" + fin + ".csv").build().toString())
+            .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+            .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Evita que una celda empiece con =, +, - o @ (inyección de fórmulas en Excel). */
+    private static String celdaCsv(Object valor) {
+        String texto = valor == null ? "" : String.valueOf(valor);
+        if (!texto.isEmpty() && "=+-@\t\r".indexOf(texto.charAt(0)) >= 0) {
+            texto = "'" + texto;
+        }
+        return '"' + texto.replace("\"", "\"\"") + '"';
     }
 }

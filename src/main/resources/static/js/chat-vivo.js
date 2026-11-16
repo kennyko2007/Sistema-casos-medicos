@@ -63,6 +63,30 @@
         bajar();
     }
 
+    function agregarArchivo(m) {
+        var vacio = cont.querySelector('.adm-hint');
+        if (vacio) { vacio.remove(); }
+
+        var div = document.createElement('div');
+        div.className = 'burbuja ' + (m.remitente === yo ? 'burbuja-mia' : 'burbuja-otro');
+
+        var enlace = document.createElement('a');
+        enlace.className = 'burbuja-archivo' +
+            ((m.tipoArchivo || '').indexOf('image/') === 0 ? ' es-imagen' : '');
+        enlace.href = m.url;                     // el archivo se descarga por HTTP, no por WebSocket
+        enlace.target = '_blank';
+        enlace.rel = 'noopener';
+        enlace.textContent = m.adjunto || 'Archivo adjunto';
+
+        var time = document.createElement('time');
+        time.textContent = m.fecha;
+
+        div.appendChild(enlace);
+        div.appendChild(time);
+        cont.appendChild(div);
+        bajar();
+    }
+
     function conectar() {
         var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
         ws = new WebSocket(proto + location.host + '/ws/chat?caso=' + encodeURIComponent(idCaso));
@@ -80,6 +104,15 @@
 
             if (m.tipo === 'escribiendo') {
                 if (m.remitente !== yo) { mostrarEscribiendo(); }
+                return;
+            }
+            if (m.tipo === 'adjunto') {
+                ocultarEscribiendo();
+                agregarArchivo(m);
+                if (m.remitente !== yo) {
+                    if (window.SonidoAviso) { window.SonidoAviso.reproducir(); }
+                    ws.send(JSON.stringify({ tipo: 'leido' }));
+                }
                 return;
             }
             if (m.tipo !== 'mensaje') { return; }
@@ -124,6 +157,33 @@
                 input.value = '';
                 input.focus();
             }
+        });
+    }
+
+    var adjForm = document.getElementById('chat-adjunto-form');
+    var adjInput = document.getElementById('chat-archivo');
+    if (adjForm && adjInput) {
+        adjInput.addEventListener('change', function () {
+            var f = adjInput.files && adjInput.files[0];
+            if (!f) { return; }
+
+            var nombre = (f.name || '').toLowerCase();
+            var tipoOk = ['application/pdf', 'image/jpeg', 'image/png'].indexOf(f.type) >= 0
+                || /\.(pdf|jpe?g|png)$/.test(nombre);
+            if (!tipoOk) {
+                alert('Solo se pueden enviar archivos PDF, JPG o PNG.');
+                adjInput.value = '';
+                return;
+            }
+            if (f.size > 10 * 1024 * 1024) {
+                alert('El archivo supera los 10 MB.');
+                adjInput.value = '';
+                return;
+            }
+
+            var boton = adjForm.querySelector('.chat-file');
+            if (boton) { boton.classList.add('enviando'); }
+            adjForm.submit();                    // sube por HTTP y la página se recarga con el adjunto
         });
     }
 
